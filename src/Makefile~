@@ -33,9 +33,9 @@ CFLAGS+=	-DSC_VERSION='"0.95"'
 ### install options
 PREFIX?=$(DESTDIR)/usr/local
 
-all:	sc
+all:	dreamflower_app
 
-sc:	sc.c
+dreamflower_app:	sc.c
 	${CC} ${CFLAGS} -o $@ $<
 
 clean:
