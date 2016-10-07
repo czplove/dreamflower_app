@@ -534,8 +534,36 @@ usage(void)
 }
 
 
+
+
+/*
+最原始的一个main函数，这个简单的可以预示着程序可以正常运行即可。
+比如在终端输出一个hello word！
+
+1.增加一个功能到现有的框架之中整个测试都在一个新的文件之中完成，实现函数
+*/
 int
-main(int argc, char **argv)
+main(int argc,char *argv[])
+{
+
+  printf("Hello World!\n");
+
+  uart1_sub(argc-1, &argv[1]);	//-测试串口功能
+  return 0;
+
+}
+
+
+
+
+
+
+
+
+
+
+int
+main_one(int argc, char **argv)
 {
 	int escchr = '~';
 	char *tty = DEFAULTDEVICE;
