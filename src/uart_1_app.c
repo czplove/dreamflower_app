@@ -69,6 +69,7 @@ void get_complete_frame(int fd)
                 memset(read_report,0,sizeof(read_report));
                 //遇到帧尾，将read_data帧拷贝到read_buf中，以便处理
                 memcpy(read_report,read_data,sizeof(read_data));
+                printf("read_report: %s\n",read_report);	//-把准备处理的报文打印出来
               }
               else
               {
@@ -106,18 +107,18 @@ void get_complete_frame(int fd)
 
 void uart_1_Main(int fd)
 {
-	char send_buf[20]="tiger john/n";
+	char send_buf[20]="tiger john\n";
 	int len;
 	
 	get_complete_frame(fd);
 	if(read_report[0] == '$')
 	{//-说明有有效命令接收到,下面开始处理
 		if(strcmp(read_report,"$0001#") == 0)
-			len = UART0_Send(fd,send_buf,20);
+			len = UART0_Send(fd,send_buf,strlen(send_buf));
 		else if(strcmp(read_report,"$0002#") == 0)
 		{
 			send_buf[0] = '2';
-			len = UART0_Send(fd,send_buf,20);
+			len = UART0_Send(fd,send_buf,strlen(send_buf));
 		}
 	}
 }
