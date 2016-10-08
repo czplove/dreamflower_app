@@ -545,6 +545,7 @@ usage(void)
 int
 main(int argc,char *argv[])
 {
+<<<<<<< HEAD
 	int fd_uart1;
 	
   printf("Hello World!\n");
@@ -563,6 +564,12 @@ main(int argc,char *argv[])
   		uart_1_Main(fd_uart1);
   	
   }
+=======
+
+  printf("Hello World!\n");
+
+  uart1_sub(argc-1, &argv[1]);	//-测试串口功能
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
   return 0;
 
 }

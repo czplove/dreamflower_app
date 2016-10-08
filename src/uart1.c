@@ -32,8 +32,13 @@ int UART0_Open(int fd,char* port)  //-目前程序如果成功的话就是阻塞
 {  
      //-O_NOCTTY:表示打开的是一个终端设备，程序不会成为该端口的控制终端。如果不使用此标志，任务一个输入(eg:键盘中止信号等)都将影响进程。
      //-O_NDELAY:表示不关心DCD信号线所处的状态（端口的另一端是否激活或者停止）。
+<<<<<<< HEAD
      fd = open( port, O_RDWR|O_NOCTTY|O_NDELAY);  
      //-fd = open( port, O_RDWR); 
+=======
+     //-fd = open( port, O_RDWR|O_NOCTTY|O_NDELAY);  
+     fd = open( port, O_RDWR); 
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
      if (FALSE == fd)  
      {  
                        perror("Can't Open Serial Port");  
@@ -193,11 +198,19 @@ int UART0_Set(int fd,int speed,int flow_ctrl,int databits,int stopbits,int parit
                  fprintf(stderr,"Unsupported stop bits\n");   
                  return (FALSE);  
     }  
+<<<<<<< HEAD
 //-如果不是开发终端之类的,只是串口传输数据,而不需要串口来处理,那么使用原始模式(Raw Mode)方式来通讯     
   //修改输出模式，原始数据输出  
   options.c_oflag &= ~OPOST;  /*Output*/
 //-经典输入是以面向行设计的.在经典输入模式中输入字符会被放入一个缓冲之中,这样可以以与用户交互的方式编辑缓冲的内容,直到收到CR(carriage return)或者LF(line feed)字符.    
   options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//我加的  /*Input*/选择原始输入
+=======
+     
+  //修改输出模式，原始数据输出  
+//-  options.c_oflag &= ~OPOST;  
+    
+//-  options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//我加的  
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
 //options.c_lflag &= ~(ISIG | ICANON);  
 
      
@@ -257,14 +270,23 @@ int UART0_Recv(int fd, char *rcv_buf,int data_len)
      
     struct timeval time;  
      
+<<<<<<< HEAD
     FD_ZERO(&fs_read);  //-将你的套节字集合清空   
     FD_SET(fd,&fs_read);  //-加入你感兴趣的套节字到集合,这里是一个读数据的套节字s,,其实就是给对应的位置1
+=======
+    FD_ZERO(&fs_read);  
+    FD_SET(fd,&fs_read);  
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
      
     time.tv_sec = 10;  
     time.tv_usec = 0;  
      
     //使用select实现串口的多路通信  
+<<<<<<< HEAD
     fs_sel = select(fd+1,&fs_read,NULL,NULL,&time);  //-对应的事件发生则返回对应的位为1
+=======
+    fs_sel = select(fd+1,&fs_read,NULL,NULL,&time);  
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
     if(fs_sel)  
        {  
               len = read(fd,rcv_buf,data_len);  
@@ -328,8 +350,11 @@ int uart1_sub(int argc, char *argv[])	//?参数如何传递过来的,在终端�
                   printf("Set Port Exactly!\n");  
       }while(FALSE == err || FALSE == fd);  
      
+<<<<<<< HEAD
      return fd; 	//-返回文件描述符,以便后面可用
      
+=======
+>>>>>>> 1ed53b67f2b8c838edf58073b746fc31b907fec3
     if(0 == strcmp(argv[2],"0"))  
     {
        for(i = 0;i < 10;i++)  
