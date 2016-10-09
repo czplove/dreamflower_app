@@ -567,7 +567,10 @@ main(int argc,char *argv[])
 	int fd_uart1;
 	
   printf("Hello World!\n");
-
+  
+  //-首先对接收到的命令进行解析,然后根据命令进行程序运行.
+  if (parse_options(argc, argv) != 0)
+		goto close;
 #if 1
 //-打印出输入命令
     int32_t i = 0;
