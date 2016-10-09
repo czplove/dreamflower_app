@@ -550,7 +550,8 @@ usage(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
+//输出目录   
+#define DIR_OUT_FILE "/tmp/out" 
 
 /*
 最原始的一个main函数，这个简单的可以预示着程序可以正常运行即可。
@@ -564,10 +565,13 @@ argv 指针数据,偏移量从0开始,分界还是空格
 int
 main(int argc,char *argv[])
 {
-	int fd_uart1;
+	int fd_uart1,fd;
 	
   printf("Hello World!\n");
-
+  
+  //-首先对接收到的命令进行解析,然后根据命令进行程序运行.
+  if (parse_options(argc, argv) != 0)
+		goto close;
 #if 1
 //-打印出输入命令
     int32_t i = 0;
@@ -588,11 +592,25 @@ main(int argc,char *argv[])
 	//-开始的测试代码可以从这里开始
   fd_uart1 = uart1_sub(argc-1, &argv[1]);	//-测试串口功能
   
+	//查看程序是否运行   
+        //新建输出文件   
+        system("touch "DIR_OUT_FILE);
+	//打开输出文件   
+        fd = open(DIR_OUT_FILE,O_CREAT|O_RDWR,0777); 
+	char buf[100] = {'1','2',3}; 
+	//-strcpy(buf,argv[2]);
+	sprintf(buf, "%d", fd_uart1);
+	//全部   
+        write(fd,buf,100);
+
+	//删除输出文件   
+        //-system("rm "DIR_OUT_FILE); 
+
   //-下面进入程序的主循环部分
   while(_running)	//-程序一但运行起来就有周期执行的地方.
   {
   	
-  	if(fd_uart1 > 0)
+  	if(fd_uart1 >= 0)
   		uart_1_Main(fd_uart1);
   	
   }
