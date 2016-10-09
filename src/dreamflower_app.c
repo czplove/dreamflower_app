@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2006,2007 Stefan Bethke <stb@lassitu.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -157,6 +157,21 @@ enum escapestates {
 static int scrunning = 1;
 static char *path_dev = PATH_DEV "/";
 static int qflag = 0;
+
+///////////////////////////////////////////////////////////////////////////////
+extern volatile sig_atomic_t _running;
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+char		run_flag	= 0;	//-0表示正常运行		1表示进入调试模式,在终端的监控下运行
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef __CYGWIN__
 static int
@@ -533,7 +548,7 @@ usage(void)
 	exit(EX_USAGE);
 }
 
-
+///////////////////////////////////////////////////////////////////////////////
 
 
 /*
@@ -548,23 +563,74 @@ main(int argc,char *argv[])
 	int fd_uart1;
 	
   printf("Hello World!\n");
-
+  
+  //-首先对接收到的命令进行解析,然后根据命令进行程序运行.
+  if (parse_options(argc, argv) != 0)
+		goto close;
 	//-下面首先进行系列初始化工作
-	
+	if(run_flag == 0)
+	{//-下面进入正常模式,就是使用守护进程,脱离终端控制
+		ate_sub();
+	}
 	
 	//-开始的测试代码可以从这里开始
   fd_uart1 = uart1_sub(argc-1, &argv[1]);	//-测试串口功能
   
   //-下面进入程序的主循环部分
-  while(1)	//-程序一但运行起来就有周期执行的地方.
+  while(_running)	//-程序一但运行起来就有周期执行的地方.
   {
   	
   	if(fd_uart1 > 0)
   		uart_1_Main(fd_uart1);
   	
   }
+  
+close:  
   return 0;
 
+}
+
+
+
+int parse_options(int argc, char *argv[])
+{
+	int c;
+	char *pLen;
+
+	while ((c = getopt(argc, argv, "a:b:Dm:r:w:e:vn:g:jkfcChuos:S:F:i:R")) != -1) 
+	{
+		switch(c) 
+		{
+			case 'a':
+				//-port_opts.bus_addr = strtoul(optarg, NULL, 0);
+				break;
+
+			case 'b':
+				//-port_opts.baudRate = serial_get_baud(strtoul(optarg, NULL, 0));
+				
+				break;
+			
+			case 'D':
+				run_flag = 1;				
+				break;
+				
+			case 'h':
+				usage();
+				exit(0);	//?这里值得思考
+
+      default: 
+				break;
+		}
+	}
+		
+
+	//-if (!wr && verify) {
+	//-	fprintf(stderr, "ERROR: Invalid usage, -v is only valid when writing\n");
+	//-	show_help(argv[0]);
+	//-	return 1;	//-出现了错误,程序需要终止了,返回1
+	//-}
+
+	return 0;	//-正常结束,可以继续运行等于0
 }
 
 
@@ -572,10 +638,7 @@ main(int argc,char *argv[])
 
 
 
-
-
-
-
+///////////////////////////////////////////////////////////////////////////////
 int
 main_one(int argc, char **argv)
 {
