@@ -26,7 +26,8 @@ Linux串口操作中，特别以非阻塞的方式读取和发送数据，做好
 #include<errno.h>      /*错误号定义*/  
 #include<string.h>  
    
-   
+#include "uart1.h"
+
 
 //首先定义了两个字符数组：
 //-一个缓冲数组，用来存放每一次读到的数据

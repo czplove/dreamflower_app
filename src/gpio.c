@@ -19,9 +19,6 @@
 //-下面定义了一个设备节点,在使用之前需要创建这样一个节点使用"mknod /dev/gpio c 252 0"的语句
 #define GPIO_DEV	"/dev/gpio"
 
-#define MAXFILE 65535
-void sigterm_handler(int arg);
-volatile sig_atomic_t _running = 1;
 
 enum {
 	gpio_in,
@@ -160,10 +157,7 @@ void gpio_led_blink(void)
 }
 */
 
-void sigterm_handler(int arg)		//-kill发出的signal信号处理，达到进程的正常退出。
-{
-		_running = 0;
-}
+
 
 
 void usage(char *cmd)
@@ -189,51 +183,7 @@ int ate_sub(void)	//?参数如何传递过来的,在终端输入命令的时候�
 	int i;
 		
 		
-	//-开始实现守护进程
-	pc = fork(); //第一步
-	if(pc<0){
-	printf("error fork\n");
-	exit(1);
-	}
-	else if(pc>0)
-		exit(0);	//-这里父进程的退出,就是实现首护进程的第一步
-		
-	pid = setsid(); //第二步,,setsid函数用于创建一个新的会话，并担任该会话组的组长。其实就是使进程完全独立出来，从而摆脱其他进程的控制。
-	if (pid < 0)
-		perror("setsid error");	
-		
-	chdir("/"); //第三步,,改变当前目录为根目录
 	
-	umask(0); //第四步,,重设文件权限掩码
-	
-	for(i=0;i<MAXFILE;i++) //第五步,,关闭文件描述符
-		close(i);	
-		
-	signal(SIGTERM, sigterm_handler);		//-守护进程退出处理,建立一个信号量,kill时可以对应处理
-	
-	//-switch (argv[1][0]) 
-	//-{
-	//-		case 'w':
-	//-			gpio_test_write(atoi(argv[2]));
-	//-			break;	
-	//-		default:
-	//-			usage(argv[0]);
-	//-}
-	
-	//-while( _running )
-	//-{
-		//-if( flag ==1 &&(fd=open("/tmp/daemon.log",O_CREAT|O_WRONLY|O_APPEND,0600))<0)
-		//-{
-		//-	perror("open");
-		//-	flag=0;
-		//-	exit(1);
-		//-}
-		//-write(fd,buf,len);
-		//-close(fd);
-		
-	//-	gpio_led_blink();
-		//-usleep(10*1000); //10毫秒
-	//-}
 	
 	return 0;
 }

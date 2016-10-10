@@ -36,6 +36,14 @@ static const char __rcsid[] =
 #include <unistd.h>
 
 #include "debugfl.h"
+#include "Daemon.h"
+#include "uart1.h"
+#include "uart_1_app.h"
+#include "fdebug.h"
+
+
+/* functions */
+int parse_options(int argc, char *argv[]);
 
 #if !defined(SC_VERSION)
 #define SC_VERSION "0.9-dev"
@@ -550,8 +558,7 @@ usage(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//输出目录   
-#define DIR_OUT_FILE "/tmp/out" 
+
 
 /*
 最原始的一个main函数，这个简单的可以预示着程序可以正常运行即可。
@@ -565,7 +572,7 @@ argv 指针数据,偏移量从0开始,分界还是空格
 int
 main(int argc,char *argv[])
 {
-	int fd_uart1,fd;
+	int fd_uart1;
 	
   printf("Hello World!\n");
   
@@ -586,25 +593,15 @@ main(int argc,char *argv[])
 	//-下面首先进行系列初始化工作
 	if(run_flag == 0)
 	{//-下面进入正常模式,就是使用守护进程,脱离终端控制
-		ate_sub();
+		daemon_init();
 	}
 	
 	//-开始的测试代码可以从这里开始
   fd_uart1 = uart1_sub(argc-1, &argv[1]);	//-测试串口功能
   
-	//查看程序是否运行   
-        //新建输出文件   
-        system("touch "DIR_OUT_FILE);
-	//打开输出文件   
-        fd = open(DIR_OUT_FILE,O_CREAT|O_RDWR,0777); 
-	char buf[100] = {'1','2',3}; 
-	//-strcpy(buf,argv[2]);
-	sprintf(buf, "%d", fd_uart1);
-	//全部   
-        write(fd,buf,100);
-
-	//删除输出文件   
-        //-system("rm "DIR_OUT_FILE); 
+  char buf[100] = {'0'}; 
+  sprintf(buf, "%d", fd_uart1);
+  f_debug(buf);
 
   //-下面进入程序的主循环部分
   while(_running)	//-程序一但运行起来就有周期执行的地方.

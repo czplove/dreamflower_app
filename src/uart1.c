@@ -309,7 +309,7 @@ int UART0_Send(int fd, char *send_buf,int data_len)
 */
 int uart1_sub(int argc, char *argv[])	//?参数如何传递过来的,在终端输入命令的时候就带入了参数
 {
-		int fd;                            //文件描述符  
+	int fd=0;                            //文件描述符  
     int err;                           //返回调用函数的状态  
     int len;                          
     int i;  
