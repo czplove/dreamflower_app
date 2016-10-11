@@ -1,6 +1,6 @@
 EXEC = dreamflower_app
 OBJS = dreamflower_app.o
-libobjs := uart1.o uart_1_app.o gpio.o Daemon.o fdebug.o
+libobjs := uart1.o uart_1_app.o gpio.o Daemon.o fdebug.o calendar.o
 
 all: $(EXEC)
 

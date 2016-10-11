@@ -40,6 +40,7 @@ static const char __rcsid[] =
 #include "uart1.h"
 #include "uart_1_app.h"
 #include "fdebug.h"
+#include "calendar.h"
 
 
 /* functions */
@@ -176,7 +177,7 @@ extern volatile sig_atomic_t _running;
 
 ///////////////////////////////////////////////////////////////////////////////
 char		run_flag	= 0;	//-0表示正常运行		1表示进入调试模式,在终端的监控下运行
-
+char		test_branch	= 0;	//-0
 
 
 
@@ -598,6 +599,9 @@ main(int argc,char *argv[])
 	
 	//-开始的测试代码可以从这里开始
   fd_uart1 = uart1_sub(argc-1, &argv[1]);	//-测试串口功能
+
+  if(test_branch == 2)
+	calendar_sub(argc-1, &argv[1]);	//-临时测试用,实现读取时间/执行时间功能
   
   char buf[100] = {'0'}; 
   sprintf(buf, "%d", fd_uart1);
@@ -624,7 +628,7 @@ int parse_options(int argc, char *argv[])
 	int c;
 	char *pLen;
 
-	while ((c = getopt(argc, argv, "a:b:Dm:r:w:e:vn:g:jkfcChuos:S:F:i:R")) != -1) 
+	while ((c = getopt(argc, argv, "a:b:DTm:r:w:e:vn:g:jkfcChuos:S:F:i:R")) != -1) 
 	{
 		switch(c) 
 		{
@@ -639,6 +643,9 @@ int parse_options(int argc, char *argv[])
 			
 			case 'D':
 				run_flag = 1;				
+				break;
+			case 'T':
+				test_branch = 2;				
 				break;
 				
 			case 'h':
