@@ -41,6 +41,7 @@ static const char __rcsid[] =
 #include "uart_1_app.h"
 #include "fdebug.h"
 #include "calendar.h"
+#include "tcpdump.h"
 
 
 /* functions */
@@ -602,6 +603,9 @@ main(int argc,char *argv[])
 
   if(test_branch == 2)
 	calendar_sub(argc-1, &argv[1]);	//-临时测试用,实现读取时间/执行时间功能
+  else if(test_branch == 3)
+    sniffer_sub(argc-1, &argv[1]);	//-临时测试用,实现网络报文的抓取和过滤
+
   
   char buf[100] = {'0'}; 
   sprintf(buf, "%d", fd_uart1);
@@ -628,7 +632,7 @@ int parse_options(int argc, char *argv[])
 	int c;
 	char *pLen;
 
-	while ((c = getopt(argc, argv, "a:b:DTm:r:w:e:vn:g:jkfcChuos:S:F:i:R")) != -1) 
+	while ((c = getopt(argc, argv, "a:b:DTS")) != -1) 
 	{
 		switch(c) 
 		{
@@ -646,6 +650,9 @@ int parse_options(int argc, char *argv[])
 				break;
 			case 'T':
 				test_branch = 2;				
+				break;
+			case 'S':
+				test_branch = 3;				
 				break;
 				
 			case 'h':

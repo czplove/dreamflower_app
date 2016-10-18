@@ -17,7 +17,7 @@ define Package/dreamflower_app
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Frame buffer device testing tool
-  DEPENDS:=+libncurses
+  DEPENDS:=+libncurses +libpcap
 endef
 
 define Build/Prepare
