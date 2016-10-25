@@ -605,6 +605,8 @@ main(int argc,char *argv[])
 	calendar_sub(argc-1, &argv[1]);	//-临时测试用,实现读取时间/执行时间功能
   else if(test_branch == 3)
     sniffer_sub(argc-1, &argv[1]);	//-临时测试用,实现网络报文的抓取和过滤
+  else if(test_branch == 4)
+    thread_sub(argc-1, &argv[1]);	//-临时测试用,实现多线程的功能
 
   
   char buf[100] = {'0'}; 
@@ -632,7 +634,7 @@ int parse_options(int argc, char *argv[])
 	int c;
 	char *pLen;
 
-	while ((c = getopt(argc, argv, "a:b:DTS")) != -1) 
+	while ((c = getopt(argc, argv, "a:b:DTSX")) != -1) 
 	{
 		switch(c) 
 		{
@@ -653,6 +655,9 @@ int parse_options(int argc, char *argv[])
 				break;
 			case 'S':
 				test_branch = 3;				
+				break;
+			case 'X':
+				test_branch = 4;				
 				break;
 				
 			case 'h':
