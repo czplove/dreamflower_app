@@ -1,17 +1,17 @@
 EXEC = dreamflower_app
 OBJS = dreamflower_app.o
-libobjs := uart1.o uart_1_app.o gpio.o Daemon.o fdebug.o calendar.o tcpdump.o thread.o
+libobjs := uart1.o uart_1_app.o gpio.o Daemon.o fdebug.o calendar.o tcpdump.o thread.o mqtt_publish.o
 
-#-增加库变异的方法先保留,这个地方不去深究
-#LIBOBJSA = tcpdump/tcpdump.a
+#-???????????,????????
+LIBOBJSA = mqtt/mqtt_client.a
 
 all: $(EXEC)
 
-#tcpdump/tcpdump.a:
-#	cd tcpdump && $(MAKE) tcpdump.a
+mqtt/mqtt_client.a:
+	cd mqtt && $(MAKE) mqtt_client.a
 
-$(EXEC): $(OBJS) $(libobjs)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(libobjs) -lpcap -lpthread
+$(EXEC): $(OBJS) $(libobjs) $(LIBOBJSA)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(libobjs) $(LIBOBJSA) -lpcap -lpthread
 
 clean:
 	rm -f rbcfg *.o $(EXEC)

@@ -42,6 +42,7 @@ static const char __rcsid[] =
 #include "fdebug.h"
 #include "calendar.h"
 #include "tcpdump.h"
+#include "mqtt_publish.h"
 
 
 /* functions */
@@ -607,6 +608,8 @@ main(int argc,char *argv[])
     sniffer_sub(argc-1, &argv[1]);	//-临时测试用,实现网络报文的抓取和过滤
   else if(test_branch == 4)
     thread_sub(argc-1, &argv[1]);	//-临时测试用,实现多线程的功能
+  else if(test_branch == 5)
+    mqtt_publish_sub(argc-1, &argv[1]);	//-临时测试用,实现MQTT通讯协议
 
   
   char buf[100] = {'0'}; 
@@ -634,7 +637,7 @@ int parse_options(int argc, char *argv[])
 	int c;
 	char *pLen;
 
-	while ((c = getopt(argc, argv, "a:b:DTSX")) != -1) 
+	while ((c = getopt(argc, argv, "a:b:DTSXM")) != -1) 
 	{
 		switch(c) 
 		{
@@ -658,6 +661,9 @@ int parse_options(int argc, char *argv[])
 				break;
 			case 'X':
 				test_branch = 4;				
+				break;
+			case 'M':
+				test_branch = 5;				
 				break;
 				
 			case 'h':
