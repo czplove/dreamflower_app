@@ -152,7 +152,7 @@ int UTF8_validateString(const char* string)
 {
 	int rc = 0;
 
-	FUNC_ENTRY;
+	FUNC_ENTRY;		//-这句话的函数功能肯定是要理解的,但是现在对于协议是没有关系的,先方法
 	rc = UTF8_validate(strlen(string), string);
 	FUNC_EXIT_RC(rc);
 	return rc;

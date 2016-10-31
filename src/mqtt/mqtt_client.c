@@ -21,9 +21,9 @@
  * @return client handle if success. return NULL if fail;
  *
  */
-mqtt_client * mqtt_new(char * host, int port, char *client_id)
+mqtt_client * mqtt_new(char * host, int port, char *client_id)	//-这里将根据参数,创建一个客户端,以一个结构体的形式记录下所有内容
 {
-	mqtt_client * m;
+	mqtt_client * m;	//-这个应该是客户端的一个实体,记录了整个一个客户端的全部信息
 	int rc;
 
 	m = malloc(sizeof(mqtt_client));

@@ -244,15 +244,15 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 	MQTTClients *m = NULL;
 
 	FUNC_ENTRY;
-	rc = Thread_lock_mutex(mqttclient_mutex);
-
-	if (serverURI == NULL || clientId == NULL)
+	rc = Thread_lock_mutex(mqttclient_mutex);	//-这里整个MQTT协议库是针对很多平台的,所以简单问题复杂了,但是这些方法都是值得学习的.
+	//-上面对线程进行了上锁
+	if (serverURI == NULL || clientId == NULL)	//-首先判断是否有必要的参数
 	{
 		rc = MQTTCLIENT_NULL_PARAMETER;
 		goto exit;
 	}
 
-	if (!UTF8_validateString(clientId))
+	if (!UTF8_validateString(clientId))	//-判断是否有非法字符存在
 	{
 		rc = MQTTCLIENT_BAD_UTF8_STRING;
 		goto exit;
@@ -263,18 +263,18 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 		#if defined(HEAP_H)
 			Heap_initialize();
 		#endif
-		Log_initialize((Log_nameValue*)MQTTClient_getVersionInfo());
-		bstate->clients = ListInitialize();
-		Socket_outInitialize();
-		Socket_setWriteCompleteCallback(MQTTClient_writeComplete);
+		Log_initialize((Log_nameValue*)MQTTClient_getVersionInfo());	//?建立自己的打印语句
+		bstate->clients = ListInitialize();	//?像初始化了一个链表
+		Socket_outInitialize();	//?进行了一系列的初始化,但是很多东西不了解
+		Socket_setWriteCompleteCallback(MQTTClient_writeComplete);	//-对回调函数赋值,这个减少了程序的耦合性
 		handles = ListInitialize();
 #if defined(OPENSSL)
 		SSLSocket_initialize();
 #endif
-		initialized = 1;
+		initialized = 1;	//-保证仅仅初始化一次
 	}
 	m = malloc(sizeof(MQTTClients));
-	*handle = m;
+	*handle = m;	//-刚刚创建了一个客户端结构对象,用于保存数据
 	memset(m, '\0', sizeof(MQTTClients));
 	if (strncmp(URI_TCP, serverURI, strlen(URI_TCP)) == 0)
 		serverURI += strlen(URI_TCP);
@@ -285,8 +285,8 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 		m->ssl = 1;
 	}
 #endif
-	m->serverURI = MQTTStrdup(serverURI);
-	ListAppend(handles, m, sizeof(MQTTClients));
+	m->serverURI = MQTTStrdup(serverURI);	//-通过参数创建一个客户端,但是程序里面需要使用一定的方法来操作,比如这里就记录了有效的一个参数
+	ListAppend(handles, m, sizeof(MQTTClients));	//-在链表中增加一个元素
 
 	m->c = malloc(sizeof(Clients));
 	memset(m->c, '\0', sizeof(Clients));
@@ -1955,7 +1955,7 @@ void MQTTProtocol_checkPendingWrites()
 }
 
 
-void MQTTClient_writeComplete(int socket)				
+void MQTTClient_writeComplete(int socket)	//-整个协议信息的存储可能需要一套机制来管理				
 {
 	ListElement* found = NULL;
 	

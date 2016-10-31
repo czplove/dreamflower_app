@@ -353,7 +353,7 @@ void HeapScan(int log_level)
 /**
  * Heap initialization.
  */
-int Heap_initialize()
+int Heap_initialize()	//-仅仅进行堆栈初始化,这个是自己建立的软件堆栈?
 {
 	TreeInitializeNoMalloc(&heap, ptrCompare);
 	heap.heap_tracking = 0; /* no recursive heap tracking! */

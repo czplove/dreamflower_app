@@ -83,7 +83,7 @@ void SocketBuffer_newDefQ(void)
 void SocketBuffer_initialize(void)
 {
 	FUNC_ENTRY;
-	SocketBuffer_newDefQ();
+	SocketBuffer_newDefQ();	//-创建一个新的队列,填写默认值
 	queues = ListInitialize();
 	ListZero(&writes);
 	FUNC_EXIT;

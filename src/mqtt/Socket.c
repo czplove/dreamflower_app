@@ -121,7 +121,7 @@ void Socket_outInitialize()
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
-	SocketBuffer_initialize();
+	SocketBuffer_initialize();	//-创建了好多新东西
 	s.clientsds = ListInitialize();
 	s.connect_pending = ListInitialize();
 	s.write_pending = ListInitialize();

@@ -3,6 +3,16 @@
  *
  * Author: JoStudio
  */
+/*
+主程序分为三个步骤：
+
+1， 调用 mqtt_new()创建 客户端对象
+
+2， 调用 mqtt_connect() 连接服务器
+
+3， 调用 mqtt_publish() 发布消息
+
+*/
 
 
 #include <stdio.h>
