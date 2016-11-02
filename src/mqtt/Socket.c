@@ -407,7 +407,7 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)
 	}
 #else
 	*bytes = 0L;
-	rc = writev(socket, iovecs, count);
+	rc = writev(socket, iovecs, count);	//-这里启动了最终数据的发送
 	if (rc == SOCKET_ERROR)
 	{
 		int err = Socket_error("writev - putdatas", socket);
@@ -593,7 +593,7 @@ int Socket_new(char* addr, int port, int* sock)
 #if defined(WIN32) || defined(WIN64)
 	short family;
 #else
-	sa_family_t family = AF_INET;
+	sa_family_t family = AF_INET;	//-这个就是以前学习很多的套机字编程,在这里完美使用,而且我以前学习的更深,直接操作寄存器,这里肯定是使用了库
 #endif
 	struct addrinfo *result = NULL;
 	struct addrinfo hints = {0, AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL};
@@ -601,11 +601,11 @@ int Socket_new(char* addr, int port, int* sock)
 	FUNC_ENTRY;
 	*sock = -1;
 
-	if (addr[0] == '[')
+	if (addr[0] == '[')	//-这个程序兼容考虑了IP6的情况
 	  ++addr;
 
-	if ((rc = getaddrinfo(addr, NULL, &hints, &result)) == 0)
-	{
+	if ((rc = getaddrinfo(addr, NULL, &hints, &result)) == 0)	//-调用了库函数,0——成功，非0——出错
+	{//-getaddrinfo函数能够处理名字到地址以及服务到端口这两种转换，返回的是一个addrinfo的结构（列表）指针而不是一个地址清单。
 		struct addrinfo* res = result;
 
 		/* prefer ip4 addresses */
@@ -649,8 +649,8 @@ int Socket_new(char* addr, int port, int* sock)
 		Log(LOG_ERROR, -1, "%s is not a valid IP address", addr);
 	else
 	{
-		*sock =	socket(family, type, 0);
-		if (*sock == INVALID_SOCKET)
+		*sock =	socket(family, type, 0);	//-*到这里就是最"底层"的库了,下面的就不需要去考虑了,
+		if (*sock == INVALID_SOCKET)	//-上面创建一个套接字,如果成功将返回一个套接字描述符
 			rc = Socket_error("socket", *sock);
 		else
 		{
@@ -662,13 +662,13 @@ int Socket_new(char* addr, int port, int* sock)
 #endif
 
 			Log(TRACE_MIN, -1, "New socket %d for %s, port %d",	*sock, addr, port);
-			if (Socket_addSocket(*sock) == SOCKET_ERROR)
+			if (Socket_addSocket(*sock) == SOCKET_ERROR)	//-前面可以知道是实现增加套接字到链表,实际如何操作的再说
 				rc = Socket_error("setnonblocking", *sock);
 			else
 			{
 				/* this could complete immmediately, even though we are non-blocking */
 				if (family == AF_INET)
-					rc = connect(*sock, (struct sockaddr*)&address, sizeof(address));
+					rc = connect(*sock, (struct sockaddr*)&address, sizeof(address));	//-建立与指定socket的连接
 	#if defined(AF_INET6)
 				else
 					rc = connect(*sock, (struct sockaddr*)&address6, sizeof(address6));

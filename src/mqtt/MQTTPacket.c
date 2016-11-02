@@ -196,10 +196,10 @@ int MQTTPacket_send(networkHandles* net, Header header, char* buffer, size_t buf
 		rc = SSLSocket_putdatas(net->ssl, net->socket, buf, buf0len, 1, &buffer, &buflen, &free);
 	else
 #endif
-		rc = Socket_putdatas(net->socket, buf, buf0len, 1, &buffer, &buflen, &free);
+		rc = Socket_putdatas(net->socket, buf, buf0len, 1, &buffer, &buflen, &free);	//-这个里面实现了数据发送
 		
 	if (rc == TCPSOCKET_COMPLETE)
-		time(&(net->lastSent));
+		time(&(net->lastSent));		//-记录最后一次发送的时间
 	
 	if (rc != TCPSOCKET_INTERRUPTED)
 	  free(buf);

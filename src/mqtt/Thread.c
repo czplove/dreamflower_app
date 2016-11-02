@@ -16,7 +16,7 @@
  *    Ian Craggs - bug #415042 - start Linux thread as disconnected
  *    Ian Craggs - fix for bug #420851
  *******************************************************************************/
-
+//-通过这个文件我知道了我必须彻底吃透这个例程,如果想学习Linux的应用程序的话.这个文件就是很好的其他程序使用的模块!!!
 /**
  * @file
  * \brief Threading related functions
@@ -47,13 +47,14 @@
 #include <memory.h>
 #include <stdlib.h>
 
+//-下面创建了一个脱离线程
 /**
  * Start a new thread
  * @param fn the function to run, must be of the correct signature
  * @param parameter pointer to the function parameter, can be NULL
  * @return the new thread
  */
-thread_type Thread_start(thread_fn fn, void* parameter)
+thread_type Thread_start(thread_fn fn, void* parameter)	//-输入的是创建的线程运行的函数和进入的参数
 {
 #if defined(WIN32) || defined(WIN64)
 	thread_type thread = NULL;
@@ -66,10 +67,10 @@ thread_type Thread_start(thread_fn fn, void* parameter)
 #if defined(WIN32) || defined(WIN64)
 	thread = CreateThread(NULL, 0, fn, parameter, 0, NULL);
 #else
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	if (pthread_create(&thread, &attr, fn, parameter) != 0)
-		thread = 0;
+	pthread_attr_init(&attr);	//-初始化一个线程对象的属性,需要用pthread_attr_destroy函数对其去除初始化。
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);	//-线程分离属性设置
+	if (pthread_create(&thread, &attr, fn, parameter) != 0)	//-创建线程 thread记录了线程的ID号 attr设置线程属性 fn线程执行的主函数 运行函数的参数
+		thread = 0;	//-上面的函数创建成功了返回0,不成功就需要把这个参数清0
 	pthread_attr_destroy(&attr);
 #endif
 	FUNC_EXIT;

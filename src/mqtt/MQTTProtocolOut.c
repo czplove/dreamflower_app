@@ -41,9 +41,9 @@ extern ClientStates* bstate;
  * @param port the returned port integer
  * @return the address string
  */
-char* MQTTProtocol_addressPort(const char* uri, int* port)
+char* MQTTProtocol_addressPort(const char* uri, int* port)	//-从一个字符串中分析出自己可以直接使用的数据格式
 {
-	char* colon_pos = strrchr(uri, ':'); /* reverse find to allow for ':' in IPv6 addresses */
+	char* colon_pos = strrchr(uri, ':'); /* reverse find to allow for ':' in IPv6 addresses */ //-从右开始查找,成功则返回该字符以及其后面的字符
 	char* buf = (char*)uri;
 	int len;
 
@@ -58,8 +58,8 @@ char* MQTTProtocol_addressPort(const char* uri, int* port)
 	{
 		int addr_len = colon_pos - uri;
 		buf = malloc(addr_len + 1);
-		*port = atoi(colon_pos + 1);
-		MQTTStrncpy(buf, uri, addr_len+1);
+		*port = atoi(colon_pos + 1);	//-获得了端口号
+		MQTTStrncpy(buf, uri, addr_len+1);	//-现在这个层次不去深究这个细节了,知道功能即可,以后需要的话可以学习人家的这方法
 	}
 	else
 		*port = DEFAULT_PORT;
@@ -84,7 +84,7 @@ char* MQTTProtocol_addressPort(const char* uri, int* port)
 #if defined(OPENSSL)
 int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int ssl, int MQTTVersion)
 #else
-int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersion)
+int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersion)	//-又一个根据参数进行的进一步连接
 #endif
 {
 	int rc, port;
@@ -93,8 +93,8 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 	FUNC_ENTRY;
 	aClient->good = 1;
 
-	addr = MQTTProtocol_addressPort(ip_address, &port);
-	rc = Socket_new(addr, port, &(aClient->net.socket));
+	addr = MQTTProtocol_addressPort(ip_address, &port);	//-通过字符提取出了自己需要的信息:IP地址+端口号
+	rc = Socket_new(addr, port, &(aClient->net.socket));	//-这个里面实现了底层的创建和连接
 	if (rc == EINPROGRESS || rc == EWOULDBLOCK)
 		aClient->connect_state = 1; /* TCP connect called - wait for connect completion */
 	else if (rc == 0)
@@ -112,12 +112,12 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 				rc = SOCKET_ERROR;
 		}
 #endif
-		
+		//-前面仅仅是实现了"硬件"的连接,下面需要进行MQTT协议的连接.
 		if (rc == 0)
 		{
 			/* Now send the MQTT connect packet */
 			if ((rc = MQTTPacket_send_connect(aClient, MQTTVersion)) == 0)
-				aClient->connect_state = 3; /* MQTT Connect sent - wait for CONNACK */ 
+				aClient->connect_state = 3; /* MQTT Connect sent - wait for CONNACK */ //-这个变量记录了目前MQTT协议所处的状态,或者说哪个流程中
 			else
 				aClient->connect_state = 0;
 		}

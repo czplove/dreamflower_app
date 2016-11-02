@@ -41,7 +41,7 @@
  * @param MQTTVersion the MQTT version to connect with
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_connect(Clients* client, int MQTTVersion)
+int MQTTPacket_send_connect(Clients* client, int MQTTVersion)	//-这里很可能就是组织MQTT协议内容了,这个协议内容需要根据MQTT来写,属于TCP的有效区域
 {
 	char *buf, *ptr;
 	Connect packet;
@@ -99,7 +99,7 @@ int MQTTPacket_send_connect(Clients* client, int MQTTVersion)
 		writeUTF(&ptr, client->username);
 	if (client->password)
 		writeUTF(&ptr, client->password);
-
+	//-上面填写的协议内容,应该可以从MQTT协议文本中找到依据
 	rc = MQTTPacket_send(&client->net, packet.header, buf, len, 1);
 	Log(LOG_PROTOCOL, 0, NULL, client->net.socket, client->clientID, client->cleansession, rc);
 exit:

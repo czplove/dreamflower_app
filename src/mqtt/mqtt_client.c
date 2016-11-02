@@ -52,17 +52,17 @@ mqtt_client * mqtt_new(char * host, int port, char *client_id)	//-这里将根据参数
  *
  * @return 0 if success, else return error code
  */
-int mqtt_connect(mqtt_client * m, char *username, char *password)
+int mqtt_connect(mqtt_client * m, char *username, char *password)	//-使用账户登录服务器,创建的客户端已经形成了一个信息体
 {
 	int rc;
-	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;	//-要做一件事情,就需要一系列参数,来指示选项,这样程序就会简化
 
-	if (!m) return -1;
+	if (!m) return -1;	//-保证客户端成功创建了,才有必要进行连接操作
 
-	conn_opts.keepAliveInterval = 20;
+	conn_opts.keepAliveInterval = 20;	//-针对默认选项进行参数修改,以便实现需要的操作
 	conn_opts.cleansession = 1;
 
-	rc = MQTTClient_connect(m->client, &conn_opts);
+	rc = MQTTClient_connect(m->client, &conn_opts);	//-把前面创建的客户端连接到服务器,使用指定的参数
 	return rc;
 }
 

@@ -204,7 +204,7 @@ START_TIME_TYPE MQTTClient_start_clock(void)
 START_TIME_TYPE MQTTClient_start_clock(void)
 {
 	static struct timeval start;
-	gettimeofday(&start, NULL);
+	gettimeofday(&start, NULL);	//-系统函数,获得当前系统时间,精确到微妙
 	return start;
 }
 #endif
@@ -226,7 +226,7 @@ long MQTTClient_elapsed(struct timespec start)
 	return (res.tv_sec)*1000L + (res.tv_nsec)/1000000L;
 }
 #else
-long MQTTClient_elapsed(struct timeval start)
+long MQTTClient_elapsed(struct timeval start)	//-得到一个时间段,单位是毫秒
 {
 	struct timeval now, res;
 
@@ -765,7 +765,7 @@ void Protocol_processPublication(Publish* publish, Clients* client)
 	FUNC_EXIT;
 }
 
-
+//-下面针对校验过的参数进行连接
 int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* options, const char* serverURI, int MQTTVersion,
 	START_TIME_TYPE start, long millisecsTimeout)
 {
@@ -776,13 +776,13 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 	FUNC_ENTRY;
 	if (m->ma && !running)
 	{
-		Thread_start(MQTTClient_run, handle);
-		if (MQTTClient_elapsed(start) >= millisecsTimeout)
-		{
+		Thread_start(MQTTClient_run, handle);	//-这里创建了一个脱离线程,然后就去执行MQTTClient_run了
+		if (MQTTClient_elapsed(start) >= millisecsTimeout)	//-得到经过的时长
+		{//-超时表示连接出错
 			rc = SOCKET_ERROR;
 			goto exit;
 		}
-		MQTTClient_sleep(100L);
+		MQTTClient_sleep(100L);	//-使用系统函数进行了休眠,但是自己定义了一个转接函数
 	}
 
 	Log(TRACE_MIN, -1, "Connecting to serverURI %s with MQTT version %d", serverURI, MQTTVersion);
@@ -942,7 +942,8 @@ exit:
   return rc;
 }
 
-
+//-这个是一个轻量级的协议,但是人家写的很模块化,所以刚开始的时候容易绕晕,但是一旦看好之后,如果需要修改的
+//-话将显得比较方便,如果是移植性的大动作就更有优势了,所以需要学习,但是要掌握方法,否则很难
 int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options, const char* serverURI)
 {
 	MQTTClients* m = handle;
@@ -953,9 +954,9 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 
 	FUNC_ENTRY;
 	millisecsTimeout = options->connectTimeout * 1000;
-	start = MQTTClient_start_clock();
+	start = MQTTClient_start_clock();	//-对系统函数进行了封装,其实不封装也行,但是这样操作后就分层了
 
-	m->c->keepAliveInterval = options->keepAliveInterval;
+	m->c->keepAliveInterval = options->keepAliveInterval;	//-把选项参数填写到结构体中,其实就是一个格式的转化,也是提供了分层
 	m->c->cleansession = options->cleansession;
 	m->c->maxInflightMessages = (options->reliable) ? 1 : 10;
 
@@ -967,7 +968,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 		m->c->will = NULL;
 	}
 
-	if (options->will && options->will->struct_version == 0)
+	if (options->will && options->will->struct_version == 0)	//?大量的信息不能理解意思和用途
 	{
 		m->c->will = malloc(sizeof(willMessages));
 		m->c->will->msg = MQTTStrdup(options->will->message);
@@ -1036,10 +1037,10 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)
 {
 	MQTTClients* m = handle;
-	int rc = SOCKET_ERROR;
+	int rc = SOCKET_ERROR;	//-这里赋给的初值也是有讲究的,是一个编程思路
 
 	FUNC_ENTRY;
-	Thread_lock_mutex(mqttclient_mutex);
+	Thread_lock_mutex(mqttclient_mutex);	//-目前这一套可以先不管,其实没有逻辑思路在里面,就是一种安全保证,系统特有的
 
 	if (options == NULL)
 	{
@@ -1083,7 +1084,7 @@ int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)
 	}
 
 	if (options->struct_version < 2 || options->serverURIcount == 0)
-		rc = MQTTClient_connectURI(handle, options, m->serverURI);
+		rc = MQTTClient_connectURI(handle, options, m->serverURI);	//-前面就一系列的参数进行了校验,如果校验通过,这里进入链接
 	else
 	{
 		int i;
