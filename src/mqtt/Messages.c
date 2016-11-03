@@ -92,7 +92,7 @@ static char* trace_message_list[] =
  * @param log_level the log level, used to determine which message list to use
  * @return the message format string
  */
-char* Messages_get(int index, int log_level)
+char* Messages_get(int index, int log_level)	//-协议信息名称,如果需要在合理范围内就返回相应元素,否则为NULL
 {
 	char* msg = NULL;
 

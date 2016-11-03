@@ -104,7 +104,7 @@ mutex_type Thread_create_mutex()
  * @param mutex the mutex
  * @return completion code, 0 is success
  */
-int Thread_lock_mutex(mutex_type mutex)
+int Thread_lock_mutex(mutex_type mutex)	//-互斥锁,会阻塞直到可用
 {
 	int rc = -1;
 

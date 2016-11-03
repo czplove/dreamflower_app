@@ -361,7 +361,7 @@ void MQTTClient_emptyMessageQueue(Clients* client)
 }
 
 
-void MQTTClient_destroy(MQTTClient* handle)
+void MQTTClient_destroy(MQTTClient* handle)	//-程序结束了,对对象的销毁
 {
 	MQTTClients* m = *handle;
 
@@ -557,7 +557,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)
 			{
 				if (pack->header.bits.type == CONNACK && !Thread_check_sem(m->connack_sem))
 				{
-					Log(TRACE_MIN, -1, "Posting connack semaphore for client %s", m->c->clientID);
+					Log(TRACE_MIN, -1, "Posting connack semaphore for client %s", m->c->clientID);	//-这里就是实现日志打印,如果没有不影响功能(即使没有配置正确)
 					m->pack = pack;
 					Thread_post_sem(m->connack_sem);
 				}
@@ -887,7 +887,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 		MQTTPacket* pack = NULL;
 
 		Thread_unlock_mutex(mqttclient_mutex);
-		pack = MQTTClient_waitfor(handle, CONNACK, &rc, millisecsTimeout - MQTTClient_elapsed(start));
+		pack = MQTTClient_waitfor(handle, CONNACK, &rc, millisecsTimeout - MQTTClient_elapsed(start));	//-在一定时间内等待应答
 		Thread_lock_mutex(mqttclient_mutex);
 		if (pack == NULL)
 			rc = SOCKET_ERROR;
@@ -1119,7 +1119,7 @@ exit:
 }
 
 
-int MQTTClient_disconnect1(MQTTClient handle, int timeout, int internal, int stop)
+int MQTTClient_disconnect1(MQTTClient handle, int timeout, int internal, int stop)	//-断开连接可能除了硬件上的还有协议上的还有程序变量上的
 {
 	MQTTClients* m = handle;
 	START_TIME_TYPE start;
@@ -1190,7 +1190,7 @@ void MQTTProtocol_closeSession(Clients* c, int sendwill)
 }
 
 
-int MQTTClient_disconnect(MQTTClient handle, int timeout)
+int MQTTClient_disconnect(MQTTClient handle, int timeout)	//-断开和服务器的连接
 {
 	return MQTTClient_disconnect1(handle, timeout, 0, 1);
 }
@@ -1413,7 +1413,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 
 	if (m == NULL || m->c == NULL)
 		rc = MQTTCLIENT_FAILURE;
-	else if (m->c->connected == 0)
+	else if (m->c->connected == 0)	//-根据标识位判断是否可以发送,并不是你要发就去发的,还要看有没有这个能力
 		rc = MQTTCLIENT_DISCONNECTED;
 	else if (!UTF8_validateString(topicName))
 		rc = MQTTCLIENT_BAD_UTF8_STRING;
@@ -1445,7 +1445,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 		rc = MQTTCLIENT_MAX_MESSAGES_INFLIGHT;
 		goto exit;
 	}
-
+	//-上面等待到了空位,下面开始填写
 	p = malloc(sizeof(Publish));
 
 	p->payload = payload;
@@ -1506,7 +1506,7 @@ int MQTTClient_publishMessage(MQTTClient handle, const char* topicName, MQTTClie
 	}
 
 	if (strncmp(message->struct_id, "MQTM", 4) != 0 || message->struct_version != 0)
-	{
+	{//-一道一道的校验
 		rc = MQTTCLIENT_BAD_STRUCTURE;
 		goto exit;
 	}
@@ -1666,7 +1666,7 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 					int error;
 					socklen_t len = sizeof(error);
 
-					if ((*rc = getsockopt(m->c->net.socket, SOL_SOCKET, SO_ERROR, (char*)&error, &len)) == 0)
+					if ((*rc = getsockopt(m->c->net.socket, SOL_SOCKET, SO_ERROR, (char*)&error, &len)) == 0)	//-获取任意类型、任意状态套接口的选项当前值，并把结果存入optval
 						*rc = error;
 					break;
 				}
@@ -1689,7 +1689,7 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 					int error;
 					socklen_t len = sizeof(error);
 
-					if (getsockopt(m->c->net.socket, SOL_SOCKET, SO_ERROR, (char*)&error, &len) == 0)
+					if (getsockopt(m->c->net.socket, SOL_SOCKET, SO_ERROR, (char*)&error, &len) == 0)	//?发生错误就退出不发生继续等待,直到超时
 					{
 						if (error)
 						{
@@ -1699,7 +1699,7 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 					}
 				}
 			}
-			if (MQTTClient_elapsed(start) > timeout)
+			if (MQTTClient_elapsed(start) > timeout)	//-超时结束等待
 			{
 				pack = NULL;
 				break;
@@ -1895,7 +1895,7 @@ exit:
 MQTTClient_nameValue* MQTTClient_getVersionInfo()
 {
 	#define MAX_INFO_STRINGS 8
-	static MQTTClient_nameValue libinfo[MAX_INFO_STRINGS + 1];
+	static MQTTClient_nameValue libinfo[MAX_INFO_STRINGS + 1];	//-这里作为静态变量,以后是可以使用的?
 	int i = 0;
 
 	libinfo[i].name = "Product name";

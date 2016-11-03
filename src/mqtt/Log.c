@@ -15,7 +15,7 @@
  *    Ian Craggs - updates for the async client
  *    Ian Craggs - fix for bug #427028
  *******************************************************************************/
-
+//-首先配置好就可以输出信息,然后如果设置好,还可以格式化打印出信息,看起来像日志
 /**
  * @file
  * \brief Logging and tracing module
@@ -63,7 +63,7 @@
 #if !defined(min)
 #define min(A,B) ( (A) < (B) ? (A):(B))
 #endif
-
+//-这个变量是一个定值,用于定义日志元素的
 trace_settings_type trace_settings =
 {
 	TRACE_MINIMUM,
@@ -93,10 +93,10 @@ typedef struct
 
 static int start_index = -1,
 			next_index = 0;
-static traceEntry* trace_queue = NULL;
+static traceEntry* trace_queue = NULL;	//-这里的跟踪队列是一些特定的信息,而并不是常规打印内容
 static int trace_queue_size = 0;
 
-static FILE* trace_destination = NULL;	/**< flag to indicate if trace is to be sent to a stream */
+static FILE* trace_destination = NULL;	/**< flag to indicate if trace is to be sent to a stream */	//-这里指定了内容输出的地点
 static char* trace_destination_name = NULL; /**< the name of the trace file */
 static char* trace_destination_backup_name = NULL; /**< the name of the backup trace file */
 static int lines_written = 0; /**< number of lines written to the current output file */
@@ -121,34 +121,34 @@ static mutex_type log_mutex = &log_mutex_store;
 #endif
 
 
-int Log_initialize(Log_nameValue* info)
+int Log_initialize(Log_nameValue* info)	//-这里输入的参数也是写入到输出文件中的,用于说明现在执行系统的基本信息的,并不是指输出地方的
 {
 	int rc = -1;
 	char* envval = NULL;
 
-	if ((trace_queue = malloc(sizeof(traceEntry) * trace_settings.max_trace_entries)) == NULL)
+	if ((trace_queue = malloc(sizeof(traceEntry) * trace_settings.max_trace_entries)) == NULL)	//-这里开辟了一个存储空间
 		return rc;
-	trace_queue_size = trace_settings.max_trace_entries;
+	trace_queue_size = trace_settings.max_trace_entries;	//-从定值表中取出需要的值,这里是日志元素个数
 
-	if ((envval = getenv("MQTT_C_CLIENT_TRACE")) != NULL && strlen(envval) > 0)
-	{
-		if (strcmp(envval, "ON") == 0 || (trace_destination = fopen(envval, "w")) == NULL)
-			trace_destination = stdout;
+	if ((envval = getenv("MQTT_C_CLIENT_TRACE")) != NULL && strlen(envval) > 0)	//-从环境中取字符串,获取环境变量的值
+	{//-如果定义了的话将返回变量指针
+		if (strcmp(envval, "ON") == 0 || (trace_destination = fopen(envval, "w")) == NULL)	//-文件顺利打开后，指向该流的文件指针就会被返回
+			trace_destination = stdout;	//-stdout是一个文件指针,C己经在头文件中定义好的了，可以直接使用，把它赋给另一个文件指针。stdout（Standardoutput）标准输出
 		else
 		{
 			trace_destination_name = malloc(strlen(envval) + 1);
 			strcpy(trace_destination_name, envval);
 			trace_destination_backup_name = malloc(strlen(envval) + 3);
-			sprintf(trace_destination_backup_name, "%s.0", trace_destination_name);
+			sprintf(trace_destination_backup_name, "%s.0", trace_destination_name);	//-把格式化的数据写入某个字符串缓冲区
 		}
-	}
+	}//-上面实现了,几种情况选择性输入,这里可以通过配置实现
 	if ((envval = getenv("MQTT_C_CLIENT_TRACE_MAX_LINES")) != NULL && strlen(envval) > 0)
-	{
+	{//-下面的参数可以配置,如果没有正确配置就使用默认值
 		max_lines_per_file = atoi(envval);
 		if (max_lines_per_file <= 0)
 			max_lines_per_file = 1000;
 	}
-	if ((envval = getenv("MQTT_C_CLIENT_TRACE_LEVEL")) != NULL && strlen(envval) > 0)
+	if ((envval = getenv("MQTT_C_CLIENT_TRACE_LEVEL")) != NULL && strlen(envval) > 0)	//-这个所谓的环境变量也许就是一个宏定义
 	{
 		if (strcmp(envval, "MAXIMUM") == 0 || strcmp(envval, "TRACE_MAXIMUM") == 0)
 			trace_settings.trace_level = TRACE_MAXIMUM;
@@ -161,21 +161,21 @@ int Log_initialize(Log_nameValue* info)
 		else if (strcmp(envval, "ERROR") == 0  || strcmp(envval, "TRACE_ERROR") == 0)
 			trace_output_level = LOG_ERROR;
 	}
-	Log_output(TRACE_MINIMUM, "=========================================================");
+	Log_output(TRACE_MINIMUM, "=========================================================");	//-从这里开始已经在输出跟踪信息了,上面主要是在校验各种参数
 	Log_output(TRACE_MINIMUM, "                   Trace Output");
-	if (info)
+	if (info)	//-*看看人家这个程序写的,太好了,太漂亮了
 	{
 		while (info->name)
 		{
-			snprintf(msg_buf, sizeof(msg_buf), "%s: %s", info->name, info->value);
-			Log_output(TRACE_MINIMUM, msg_buf);
+			snprintf(msg_buf, sizeof(msg_buf), "%s: %s", info->name, info->value);	//-将可变个参数(...)按照format格式化成字符串，然后将其复制到str中
+			Log_output(TRACE_MINIMUM, msg_buf);	//-格式整理好了之后,进行输出处理
 			info++;
 		}
 	}
 #if !defined(WIN32) && !defined(WIN64)
 	struct stat buf;
-	if (stat("/proc/version", &buf) != -1)
-	{
+	if (stat("/proc/version", &buf) != -1)	//-通过文件名filename获取文件信息，并保存在buf所指的结构体stat中
+	{//-先判断上面的文件在不在,上面的文件记录了一些信息,下面将读取需要的信息
 		FILE* vfile;
 		
 		if ((vfile = fopen("/proc/version", "r")) != NULL)
@@ -184,25 +184,25 @@ int Log_initialize(Log_nameValue* info)
 			
 			strcpy(msg_buf, "/proc/version: ");
 			len = strlen(msg_buf);
-			if (fgets(&msg_buf[len], sizeof(msg_buf) - len, vfile))
+			if (fgets(&msg_buf[len], sizeof(msg_buf) - len, vfile))	//-从文件结构体指针stream中读取数据，每次读取一行。
 				Log_output(TRACE_MINIMUM, msg_buf);
 			fclose(vfile);
 		}
 	}
 #endif
-	Log_output(TRACE_MINIMUM, "=========================================================");
+	Log_output(TRACE_MINIMUM, "=========================================================");	//-输出分割符,以上是系统的基本信息打印
 		
 	return rc;
 }
 
 
-void Log_setTraceCallback(Log_traceCallback* callback)
+void Log_setTraceCallback(Log_traceCallback* callback)	//-提供了跟踪回调,但是目前没有使用
 {
 	trace_callback = callback;
 }
 
 
-void Log_setTraceLevel(enum LOG_LEVELS level)
+void Log_setTraceLevel(enum LOG_LEVELS level)	//-设置跟踪等级
 {
 	if (level < TRACE_MINIMUM) /* the lowest we can go is TRACE_MINIMUM*/
 		trace_settings.trace_level = level;
@@ -210,7 +210,7 @@ void Log_setTraceLevel(enum LOG_LEVELS level)
 }
 
 
-void Log_terminate()
+void Log_terminate()	//-跟踪结束处理
 {
 	free(trace_queue);
 	trace_queue = NULL;
@@ -222,9 +222,9 @@ void Log_terminate()
 		trace_destination = NULL;
 	}
 	if (trace_destination_name)
-		free(trace_destination_name);
+		free(trace_destination_name);	//-动态分配的内存用完之后可以用free释放掉，传给free的参数正是先前malloc返回的内存块首地址。
 	if (trace_destination_backup_name)
-		free(trace_destination_backup_name);
+		free(trace_destination_backup_name);	//-释放之后malloc又可以用了,否则不好用
 	start_index = -1;
 	next_index = 0;
 	trace_output_level = -1;
@@ -237,7 +237,7 @@ static traceEntry* Log_pretrace()
 	traceEntry *cur_entry = NULL;
 
 	/* calling ftime/gettimeofday seems to be comparatively expensive, so we need to limit its use */
-	if (++sametime_count % 20 == 0)
+	if (++sametime_count % 20 == 0)	//-由于使用很贵,所以限制使用次数
 	{
 #if defined(GETTIMEOFDAY)
 		gettimeofday(&ts, NULL);
@@ -284,13 +284,13 @@ static traceEntry* Log_pretrace()
 }
 
 
-static char* Log_formatTraceEntry(traceEntry* cur_entry)
+static char* Log_formatTraceEntry(traceEntry* cur_entry)	//-根据传入的参数,进行格式化数据到一个缓冲区,其实就是格式转化
 {
 	struct tm *timeinfo;
 	int buf_pos = 31;
 
 #if defined(GETTIMEOFDAY)
-	timeinfo = localtime(&cur_entry->ts.tv_sec);
+	timeinfo = localtime(&cur_entry->ts.tv_sec);	//-把前面获取的系统时间(以秒为单位的大整数),转化为当地时间(用年月日时分秒表示)
 #else
 	timeinfo = localtime(&cur_entry->ts.time);
 #endif
@@ -321,17 +321,17 @@ static char* Log_formatTraceEntry(traceEntry* cur_entry)
 }
 
 
-static void Log_output(int log_level, char* msg)
+static void Log_output(int log_level, char* msg)	//-把信息打印到预设的文件中
 {
-	if (trace_destination)
+	if (trace_destination)	//-判断文件路径是否有效,有才有必要写
 	{
-		fprintf(trace_destination, "%s\n", msg);
+		fprintf(trace_destination, "%s\n", msg);	//-传送格式化输出到一个文件中,,输出到文件其实这里的情况就是显示了在终端,在Linux文件中所有东西都是文件
 
-		if (trace_destination != stdout && ++lines_written >= max_lines_per_file)
-		{	
-
-			fclose(trace_destination);		
-			_unlink(trace_destination_backup_name); /* remove any old backup trace file */
+		if (trace_destination != stdout && ++lines_written >= max_lines_per_file)	//-如果文件写满了,就重新写,把原来的删除
+		{//-如果不是标准输出设备,而是写文件的话,这里就进行适合文件的处理	
+			//?这里的目的是什么还不清楚
+			fclose(trace_destination);	//-把缓冲区内最后剩余的数据输出到内核缓冲区，并释放文件指针和有关的缓冲区。		
+			_unlink(trace_destination_backup_name); /* remove any old backup trace file */	//-会删除参数pathname指定的文件
 			rename(trace_destination_name, trace_destination_backup_name); /* rename recently closed to backup */
 			trace_destination = fopen(trace_destination_name, "w"); /* open new trace file */
 			if (trace_destination == NULL)
@@ -339,15 +339,15 @@ static void Log_output(int log_level, char* msg)
 			lines_written = 0;
 		}
 		else
-			fflush(trace_destination);
+			fflush(trace_destination);	//-fflush(stdout)刷新标准输出缓冲区，把输出缓冲区里的东西打印到标准输出设备上,,这里相当于立即输出
 	}
 		
-	if (trace_callback)
+	if (trace_callback)	//-这里应该是预留的一个打印回调函数,但是目前并没有使用,人家这么做是的程序扩展性很好
 		(*trace_callback)(log_level, msg);
 }
 
 
-static void Log_posttrace(int log_level, traceEntry* cur_entry)
+static void Log_posttrace(int log_level, traceEntry* cur_entry)	//-后跟踪,,也是向跟踪文件中输入信息,只是这个信息是特定内容
 {
 	if (((trace_output_level == -1) ? log_level >= trace_settings.trace_level : log_level >= trace_output_level))
 	{
@@ -361,14 +361,14 @@ static void Log_posttrace(int log_level, traceEntry* cur_entry)
 }
 
 
-static void Log_trace(int log_level, char* buf)
+static void Log_trace(int log_level, char* buf)	//-跟踪是一个独立功能和打印信息不一样
 {
 	traceEntry *cur_entry = NULL;
 
-	if (trace_queue == NULL)
+	if (trace_queue == NULL)	//-不等于0才有跟踪功能,才需要继续处理
 		return;
 
-	cur_entry = Log_pretrace();
+	cur_entry = Log_pretrace();	//-进入跟踪之前的前期处理
 
 	memcpy(&(cur_entry->ts), &ts, sizeof(ts));
 	cur_entry->sametime_count = sametime_count;
@@ -377,7 +377,7 @@ static void Log_trace(int log_level, char* buf)
 	strncpy(cur_entry->name, buf, sizeof(cur_entry->name));
 	cur_entry->name[MAX_FUNCTION_NAME_LENGTH] = '\0';
 
-	Log_posttrace(log_level, cur_entry);
+	Log_posttrace(log_level, cur_entry);	//-感觉有点像跟踪打印的固定结束语一样
 }
 
 
@@ -390,24 +390,24 @@ static void Log_trace(int log_level, char* buf)
  * @param aFormat the printf format string to be used if the message id does not exist
  * @param ... the printf inserts
  */
-void Log(int log_level, int msgno, char* format, ...)
+void Log(int log_level, int msgno, char* format, ...)	//-参数是可变的,下面需要通过一定的方法获取具体参数
 {
-	if (log_level >= trace_settings.trace_level)
+	if (log_level >= trace_settings.trace_level)	//-这里控制了等级打印,不同等级打印不同信息
 	{
 		char* temp = NULL;
 		static char msg_buf[512];
-		va_list args;
+		va_list args;	//-定义一个va_list型的变量,这个变量是指向参数的指针.
 
 		/* we're using a static character buffer, so we need to make sure only one thread uses it at a time */
-		Thread_lock_mutex(log_mutex); 
-		if (format == NULL && (temp = Messages_get(msgno, log_level)) != NULL)
+		Thread_lock_mutex(log_mutex);	//-这里调用了一个互斥锁,其实就是对库函数的又一封装 
+		if (format == NULL && (temp = Messages_get(msgno, log_level)) != NULL)	//-尝试获得协议内容,在一个数组内查找何时的元素,根据偏移量确定
 			format = temp;
+		//-在C中，当我们无法列出传递函数的所有实参的类型和数目时,可以用省略号指定参数表
+		va_start(args, format);	//-用va_start宏初始化变量,这个宏的第二个参数是第一个可变参数的前一个参数,是一个固定的参数
+		vsnprintf(msg_buf, sizeof(msg_buf), format, args);	//-将可变参数格式化输出到一个字符数组。
 
-		va_start(args, format);
-		vsnprintf(msg_buf, sizeof(msg_buf), format, args);
-
-		Log_trace(log_level, msg_buf);
-		va_end(args);
+		Log_trace(log_level, msg_buf);	//-上面获取了可变参数的值,这里进行了使用
+		va_end(args);	//-用va_end宏结束可变参数的获取
 		Thread_unlock_mutex(log_mutex); 
 	}
 
@@ -429,7 +429,7 @@ void Log(int log_level, int msgno, char* format, ...)
  * @param aFormat the printf format string to be used if the message id does not exist
  * @param ... the printf inserts
  */
-void Log_stackTrace(int log_level, int msgno, int thread_id, int current_depth, const char* name, int line, int* rc)
+void Log_stackTrace(int log_level, int msgno, int thread_id, int current_depth, const char* name, int line, int* rc)	//?猜测用于堆栈的跟踪
 {
 	traceEntry *cur_entry = NULL;
 

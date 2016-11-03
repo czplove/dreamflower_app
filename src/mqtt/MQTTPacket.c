@@ -413,7 +413,7 @@ void writeChar(char** pptr, char c)
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param anInt the integer to write
  */
-void writeInt(char** pptr, int anInt)
+void writeInt(char** pptr, int anInt)	//-把整数转化为字节保存
 {
 	**pptr = (char)(anInt / 256);
 	(*pptr)++;

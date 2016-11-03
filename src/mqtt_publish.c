@@ -42,7 +42,7 @@ int mqtt_publish_sub(int argc, char ** argv) {
 	}
 
 	//connect to server
-	ret = mqtt_connect(m, username, password); //连接服务器
+	ret = mqtt_connect(m, username, password); //连接服务器,这里不仅仅有硬件连接还有MQTT协议连接
 	if (ret != MQTT_SUCCESS ) {
 		printf("mqtt client connect failure, return code = %d\n", ret);
 		return 1;

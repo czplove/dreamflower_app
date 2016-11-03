@@ -236,7 +236,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)
 
 		memcpy((void*)&(s.rset), (void*)&(s.rset_saved), sizeof(s.rset));
 		memcpy((void*)&(pwset), (void*)&(s.pending_wset), sizeof(pwset));
-		if ((rc = select(s.maxfdp1, &(s.rset), &pwset, NULL, &timeout)) == SOCKET_ERROR)
+		if ((rc = select(s.maxfdp1, &(s.rset), &pwset, NULL, &timeout)) == SOCKET_ERROR)	//-多路检测可用套接字,确定套接字的状态
 		{
 			Socket_error("read select", 0);
 			goto exit;
@@ -407,6 +407,7 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)
 	}
 #else
 	*bytes = 0L;
+	//-readv和writev函数用于在一次函数调用中读、写多个非连续缓冲区。有时也将这两个函数称为散布读（scatter read）和聚集写（gather write）。
 	rc = writev(socket, iovecs, count);	//-这里启动了最终数据的发送
 	if (rc == SOCKET_ERROR)
 	{
@@ -461,7 +462,7 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 		frees1[i+1] = frees[i];
 	}
 
-	if ((rc = Socket_writev(socket, iovecs, count+1, &bytes)) != SOCKET_ERROR)
+	if ((rc = Socket_writev(socket, iovecs, count+1, &bytes)) != SOCKET_ERROR)	//-这里实现了数据的最终发送出去
 	{
 		if (bytes == total)
 			rc = TCPSOCKET_COMPLETE;

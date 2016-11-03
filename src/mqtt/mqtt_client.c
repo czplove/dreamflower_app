@@ -216,13 +216,13 @@ int mqtt_publish_data(mqtt_client * m, char *topic, void *data, int length, int 
 	MQTTClient_deliveryToken token = -1;
 	int rc;
 
-	if (!m) return -1;
+	if (!m) return -1;	//-有必要进行下面操作的前提就是有这样一个实体
 
 	pubmsg.payload = data;
 	pubmsg.payloadlen = length;
 	pubmsg.qos = Qos;
 	pubmsg.retained = 0;
-
+	//-上面进行了格式转化
 	rc = MQTTClient_publishMessage(m->client, topic, &pubmsg, &token);
 	if ( rc != MQTTCLIENT_SUCCESS )
 		return rc;
@@ -250,7 +250,7 @@ int mqtt_publish_data(mqtt_client * m, char *topic, void *data, int length, int 
  * @return positive integer of message token if success. return negative integer of error code if fail
  *    Token is a value representing an MQTT message
  */
-int mqtt_publish(mqtt_client * m, char *topic, char *message, int Qos)
+int mqtt_publish(mqtt_client * m, char *topic, char *message, int Qos)	//-这里发部消息,都使用一个函数进行转接,其实完全没有这个必要,所以你要考虑考虑人家的用意
 {
 	return mqtt_publish_data(m, topic, message, strlen(message), Qos);
 }
