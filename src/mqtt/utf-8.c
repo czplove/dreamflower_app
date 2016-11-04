@@ -69,7 +69,7 @@ valid_ranges[] =
  * @param data the bytes to check for a valid UTF-8 char
  * @return pointer to the start of the next UTF-8 character in "data"
  */
-const char* UTF8_char_validate(int len, const char* data)
+const char* UTF8_char_validate(int len, const char* data)	//-根据格式判断是否是这个类型的字符
 {
 	int good = 0;
 	int charlen = 2;
