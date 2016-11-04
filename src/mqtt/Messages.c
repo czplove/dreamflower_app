@@ -34,7 +34,7 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define max_msg_len 120
-
+//-下面数组里存放了协议信息
 static char* protocol_message_list[] =
 {
 	"%d %s -> CONNECT cleansession: %d (%d)", /* 0, was 131, 68 and 69 */
@@ -68,7 +68,7 @@ static char* protocol_message_list[] =
 	"%d %s -> DISCONNECT (%d)", /* 28 */
 	"Socket error for client identifier %s, socket %d, peer address %s; ending connection", /* 29 */
 };
-
+//-存放了跟踪的可能信息常量
 static char* trace_message_list[] =
 {
 	"Failed to remove client from bstate->clients", /* 0 */

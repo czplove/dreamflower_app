@@ -75,7 +75,7 @@ const char* UTF8_char_validate(int len, const char* data)
 	int charlen = 2;
 	int i, j;
 	const char *rc = NULL;
-
+	//-UTF-8用1到4个字节编码Unicode字符。
 	FUNC_ENTRY;
 	/* first work out how many bytes this char is encoded in */
 	if ((data[0] & 128) == 0)
@@ -148,7 +148,7 @@ exit:
  * @param string the string to check for valid UTF-8 characters
  * @return 1 (true) if the string has only UTF-8 characters, 0 (false) otherwise
  */
-int UTF8_validateString(const char* string)
+int UTF8_validateString(const char* string)	//-判断是否仅仅包含UTF-8 characters
 {
 	int rc = 0;
 
