@@ -59,7 +59,7 @@ static List writes;
  * @param b second integer value
  * @return boolean indicating whether a and b are equal
  */
-int socketcompare(void* a, void* b)
+int socketcompare(void* a, void* b)	//?套接字比较意味着什么
 {
 	return ((socket_queue*)a)->socket == *(int*)b;
 }
@@ -68,7 +68,7 @@ int socketcompare(void* a, void* b)
 /**
  * Create a new default queue when one has just been used.
  */
-void SocketBuffer_newDefQ(void)
+void SocketBuffer_newDefQ(void)	//-创建一个新的套接字缓冲区元素,主要是开辟空间和赋初始值
 {
 	def_queue = malloc(sizeof(socket_queue));
 	def_queue->buflen = 1000;
@@ -80,11 +80,11 @@ void SocketBuffer_newDefQ(void)
 /**
  * Initialize the socketBuffer module
  */
-void SocketBuffer_initialize(void)
+void SocketBuffer_initialize(void)	//-初始化了一系列的元素,为后面实现功能准备
 {
 	FUNC_ENTRY;
 	SocketBuffer_newDefQ();	//-创建一个新的队列,填写默认值
-	queues = ListInitialize();
+	queues = ListInitialize();	//-申请了一个list空间
 	ListZero(&writes);
 	FUNC_EXIT;
 }

@@ -13,7 +13,7 @@
  * Contributors:
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *******************************************************************************/
-
+//-这个文件目前并没有适用到,作为一个功能块在这里供调用
 #include "StackTrace.h"
 #include "Log.h"
 #include "LinkedList.h"
@@ -72,17 +72,17 @@ static mutex_type stack_mutex = &stack_mutex_store;
 #endif
 
 
-int setStack(int create)
+int setStack(int create)	//-首先在里面找,如果有就返回偏移量,没有的话建一个
 {
 	int i = -1;
-	thread_id_type curid = Thread_getid();
+	thread_id_type curid = Thread_getid();	//-获取线程自身ID
 
 	cur_thread = NULL;
 	for (i = 0; i < MAX_THREADS && i < thread_count; ++i)
 	{
 		if (threads[i].id == curid)
 		{
-			cur_thread = &threads[i];
+			cur_thread = &threads[i];	//-寻找到当前的线程ID
 			break;
 		}
 	}

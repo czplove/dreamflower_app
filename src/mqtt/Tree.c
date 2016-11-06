@@ -33,7 +33,7 @@
 #include "Heap.h"
 
 
-void TreeInitializeNoMalloc(Tree* aTree, int(*compare)(void*, void*, int))
+void TreeInitializeNoMalloc(Tree* aTree, int(*compare)(void*, void*, int))	//-开辟一个节点
 {
 	memset(aTree, '\0', sizeof(Tree));
 	aTree->heap_tracking = 1;
@@ -57,14 +57,14 @@ Tree* TreeInitialize(int(*compare)(void*, void*, int))
 }
 
 
-void TreeAddIndex(Tree* aTree, int(*compare)(void*, void*, int))
+void TreeAddIndex(Tree* aTree, int(*compare)(void*, void*, int))	//-把开辟的节点增加到一个序列中
 {
 	aTree->index[aTree->indexes].compare = compare;
 	++(aTree->indexes);
 }
 
 
-void TreeFree(Tree* aTree)
+void TreeFree(Tree* aTree)	//-释放一个节点
 {
 #if defined(UNIT_TESTS)
 	free(aTree);
@@ -531,7 +531,7 @@ int TreeStringCompare(void* a, void* b, int content)
 	return strcmp((char*)a, (char*)b);
 }
 
-
+//-看到没有,这里也隐含了一个编程方法
 #if defined(UNIT_TESTS)
 
 int check(Tree *t)

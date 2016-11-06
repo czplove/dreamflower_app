@@ -36,6 +36,25 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #endif
 
+/*
+Íò¹úÂë×Ö·ûËµÃ÷:
+Êµ¼Ê±íÊ¾ASCII×Ö·ûµÄUNICODE×Ö·û£¬½«»á±àÂë³É1¸ö×Ö½Ú£¬²¢ÇÒUTF-8±íÊ¾ÓëASCII×Ö·û±íÊ¾
+ÊÇÒ»ÑùµÄ¡£ËùÓĞÆäËûµÄUNICODE×Ö·û×ª»¯³ÉUTF-8½«ĞèÒªÖÁÉÙ2¸ö×Ö½Ú¡£Ã¿¸ö×Ö½ÚÓÉÒ»¸ö»»Âë
+ĞòÁĞ¿ªÊ¼¡£µÚÒ»¸ö×Ö½ÚÓÉÎ¨Ò»µÄ»»ÂëĞòÁĞ£¬ÓÉnÎ»Á¬ĞøµÄ1¼ÓÒ»Î»0×é³É, Ê××Ö½ÚÁ¬ĞøµÄ1µÄ
+¸öÊı±íÊ¾×Ö·û±àÂëËùĞèµÄ×Ö½ÚÊı¡£
+Unicode×ª»»ÎªUTF-8Ê±£¬¿ÉÒÔ½«Unicode¶ş½øÖÆ´ÓµÍÎ»Íù¸ßÎ»È¡³ö¶ş½øÖÆÊı×Ö£¬Ã¿´ÎÈ¡6Î»£¬
+ÈçÉÏÊöµÄ¶ş½øÖÆ¾Í¿ÉÒÔ·Ö±ğÈ¡³öÎªÈçÏÂÊ¾ÀıËùÊ¾µÄ¸ñÊ½£¬Ç°Ãæ°´¸ñÊ½Ìî²¹£¬²»×ã8Î»ÓÃ0Ìî²¹¡£
+×¢£ºUnicode×ª»»ÎªUTF-8ĞèÒªµÄ×Ö½ÚÊı¿ÉÒÔ¸ù¾İÕâ¸ö¹æÔò¼ÆËã£ºÈç¹ûUnicodeĞ¡ÓÚ0X80£¨Ascii×Ö·û£©£¬
+Ôò×ª»»ºóÎª1¸ö×Ö½Ú¡£·ñÔò×ª»»ºóµÄ×Ö½ÚÊıÎªUnicode¶ş½øÖÆÎ»Êı¼õ1ÔÙ³ıÒÔ5¡£
+Ê¾Àı
+UNICODE uCA(1100 1010) ±àÂë³ÉUTF-8½«ĞèÒª2¸ö×Ö½Ú£º
+uCA -> C3 8A£¬ ¹ı³ÌÈçÏÂ£º
+uCA(1100 1010)´¦ÓÚ0080 ~07FFÖ®¼ä£¬´ÓÉÏÎÄÖĞµÄ×ª»»±í¿ÉÖª¶ÔÆä±àÂëĞèÒª2bytes£¬¼´Á½¸ö
+×Ö½Ú£¬Æä¶Ô Ó¦ UTF-8¸ñÊ½Îª£º 110X XXXX10XX XXXX¡£´Ó´Ë¸ñÊ½ÖĞ¿ÉÒÔ¿´µ½£¬¶ÔÆä±àÂë»¹Ğè
+Òª11Î»£¬¶øuCA(1100 1010)½öÓĞ8Î»£¬ÕâÊ±ĞèÒªÔÚÆä¶ş½øÖÆÊıÇ°²¹0´Õ³É11Î»: 000 1100 1010,
+ÒÀ´ÎÌîÈë110X XXXX 10XX XXXXµÄ¿ÕÎ»ÖĞ£¬ ¼´µÃ 1100 0011 1000 1010£¨C38A£©¡£
+ÆäÊµ¾ÍÊÇ°Ñ²»Í¬³¤¶ÈµÄ×Ö½Ú,ÓÃÒ»ÖÖ¿ÉÔÄ¶ÁµÄĞ­Òé±íÊ¾³öÀ´
+*/
 
 /**
  * Structure to hold the valid ranges of UTF-8 characters, for each byte up to 4
@@ -78,9 +97,9 @@ const char* UTF8_char_validate(int len, const char* data)	//-¸ù¾İ¸ñÊ½ÅĞ¶ÏÊÇ·ñÊÇÕ
 	//-UTF-8ÓÃ1µ½4¸ö×Ö½Ú±àÂëUnicode×Ö·û¡£
 	FUNC_ENTRY;
 	/* first work out how many bytes this char is encoded in */
-	if ((data[0] & 128) == 0)
+	if ((data[0] & 128) == 0)	//-µÈÓÚ0¿Ï¶¨¾ÍÊÇÒ»¸ö×Ö½Ú
 		charlen = 1;
-	else if ((data[0] & 0xF0) == 0xF0)
+	else if ((data[0] & 0xF0) == 0xF0)	//-¾ÍÊÇÒ»Ì×Ğ­Òé
 		charlen = 4;
 	else if ((data[0] & 0xE0) == 0xE0)
 		charlen = 3;
@@ -134,7 +153,7 @@ int UTF8_validate(int len, const char* data)
 	}
 	curdata = UTF8_char_validate(len, data);
 	while (curdata && (curdata < data + len))
-		curdata = UTF8_char_validate(len, curdata);
+		curdata = UTF8_char_validate(len, curdata);	//-Èç¹ûÊ¶±ğ·ûºÏµÄ»°,¾Í¼ÌĞøÏÂÒ»¸ö,Ö±µ½×îºó»òÓöµ½²»·ûºÏµÄ
 
 	rc = curdata != NULL;
 exit:
