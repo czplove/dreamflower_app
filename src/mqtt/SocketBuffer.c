@@ -93,7 +93,7 @@ void SocketBuffer_initialize(void)	//-初始化了一系列的元素,为后面实现功能准备
 /**
  * Free the default queue memory
  */
-void SocketBuffer_freeDefQ(void)
+void SocketBuffer_freeDefQ(void)	//-释放默认的存储空间
 {
 	free(def_queue->buf);
 	free(def_queue);
@@ -103,7 +103,7 @@ void SocketBuffer_freeDefQ(void)
 /**
  * Terminate the socketBuffer module
  */
-void SocketBuffer_terminate(void)
+void SocketBuffer_terminate(void)	//-终止套接字缓冲模块,可能就是清空一个列表了
 {
 	ListElement* cur = NULL;
 	ListEmpty(&writes);
@@ -121,7 +121,7 @@ void SocketBuffer_terminate(void)
  * Cleanup any buffers for a specific socket
  * @param socket the socket to clean up
  */
-void SocketBuffer_cleanup(int socket)
+void SocketBuffer_cleanup(int socket)	//-清除一个特定套接字的缓存
 {
 	FUNC_ENTRY;
 	if (ListFindItem(queues, &socket, socketcompare))
@@ -142,7 +142,7 @@ void SocketBuffer_cleanup(int socket)
  * @param actual_len the actual length returned
  * @return the actual data
  */
-char* SocketBuffer_getQueuedData(int socket, int bytes, int* actual_len)
+char* SocketBuffer_getQueuedData(int socket, int bytes, int* actual_len)	//-得到任何排队数据为一个特定的套接字
 {
 	socket_queue* queue = NULL;
 
@@ -182,12 +182,12 @@ char* SocketBuffer_getQueuedData(int socket, int bytes, int* actual_len)
  * @param c the character returned if any
  * @return completion code
  */
-int SocketBuffer_getQueuedChar(int socket, char* c)
+int SocketBuffer_getQueuedChar(int socket, char* c)	//-得到一些队列的特性对于一个指定的套接字
 {
 	int rc = SOCKETBUFFER_INTERRUPTED;
 
 	FUNC_ENTRY;
-	if (ListFindItem(queues, &socket, socketcompare))
+	if (ListFindItem(queues, &socket, socketcompare))	//-一个套接字会对应一个队列
 	{  /* if there is queued data for this socket, read that first */
 		socket_queue* queue = (socket_queue*)(queues->current->content);
 		if (queue->index < queue->headerlen)
@@ -215,7 +215,7 @@ exit:
  * @param socket the socket to get queued data for
  * @param actual_len the actual length of data that was read
  */
-void SocketBuffer_interrupted(int socket, int actual_len)
+void SocketBuffer_interrupted(int socket, int actual_len)	//-整体思想没有看通
 {
 	socket_queue* queue = NULL;
 
@@ -273,18 +273,18 @@ void SocketBuffer_queueChar(int socket, char c)
 		def_queue->socket = socket;
 		def_queue->index = def_queue->datalen = 0;
 	}
-	else if (def_queue->socket != socket)
+	else if (def_queue->socket != socket)	//-如何判断的重用套接字队列的
 	{
 		Log(LOG_FATAL, -1, "attempt to reuse socket queue");
 		error = 1;
 	}
 	if (curq->index > 4)
 	{
-		Log(LOG_FATAL, -1, "socket queue fixed_header field full");
+		Log(LOG_FATAL, -1, "socket queue fixed_header field full");	//-套接字固定头区域满了
 		error = 1;
 	}
 	if (!error)
-	{
+	{//-正确了就填写进去
 		curq->fixed_header[(curq->index)++] = c;
 		curq->headerlen = curq->index;
 	}
@@ -312,20 +312,20 @@ void SocketBuffer_pendingWrite(int socket, int count, iobuf* iovecs, int* frees,
 
 	FUNC_ENTRY;
 	/* store the buffers until the whole packet is written */
-	pw = malloc(sizeof(pending_writes));
+	pw = malloc(sizeof(pending_writes));	//-首先开辟一个空间
 	pw->socket = socket;
 #if defined(OPENSSL)
 	pw->ssl = ssl;
 #endif
 	pw->bytes = bytes;
 	pw->total = total;
-	pw->count = count;
+	pw->count = count;	//-这个空间作为一个属性表来使用,记录基本信息
 	for (i = 0; i < count; i++)
 	{
 		pw->iovecs[i] = iovecs[i];
 		pw->frees[i] = frees[i];
 	}
-	ListAppend(&writes, pw, sizeof(pw) + total);
+	ListAppend(&writes, pw, sizeof(pw) + total);	//-这里传递过去的仅仅是一个属性值,实际列表的增加需要再创建空间
 	FUNC_EXIT;
 }
 
@@ -336,7 +336,7 @@ void SocketBuffer_pendingWrite(int socket, int count, iobuf* iovecs, int* frees,
  * @param b second integer value
  * @return boolean indicating whether a and b are equal
  */
-int pending_socketcompare(void* a, void* b)
+int pending_socketcompare(void* a, void* b)	//-这是一个回调函数
 {
 	return ((pending_writes*)a)->socket == *(int*)b;
 }

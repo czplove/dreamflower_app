@@ -88,7 +88,7 @@ void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size
  * @param content the list item content itself
  * @param size the size of the element
  */
-void ListAppend(List* aList, void* content, int size)
+void ListAppend(List* aList, void* content, int size)	//-在一个列表中增加一个项目
 {
 	ListElement* newel = malloc(sizeof(ListElement));
 	ListAppendNoMalloc(aList, content, newel, size);
@@ -147,7 +147,7 @@ ListElement* ListFind(List* aList, void* content)
  * @param callback pointer to a function which compares each element (NULL means compare by content pointer)
  * @return the list element found, or NULL
  */
-ListElement* ListFindItem(List* aList, void* content, int(*callback)(void*, void*))
+ListElement* ListFindItem(List* aList, void* content, int(*callback)(void*, void*))	//-在一个列表中寻找到一个元素,方法可通过定义的回调函数选择
 {
 	ListElement* rc = NULL;
 
@@ -235,7 +235,7 @@ int ListUnlink(List* aList, void* content, int(*callback)(void*, void*), int fre
  * @param content pointer to the content to look for
  * @return 1=item removed, 0=item not removed
  */
-int ListDetach(List* aList, void* content)
+int ListDetach(List* aList, void* content)	//-从列表中移除一个元素
 {
 	return ListUnlink(aList, content, NULL, 0);
 }

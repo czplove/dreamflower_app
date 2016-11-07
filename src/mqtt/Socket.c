@@ -155,18 +155,18 @@ void Socket_outTerminate()
  * Add a socket to the list of socket to check with select
  * @param newSd the new socket to add
  */
-int Socket_addSocket(int newSd)
+int Socket_addSocket(int newSd)	//-套接字是一个单位,一个套接字又对应了一个列表
 {
 	int rc = 0;
 
 	FUNC_ENTRY;
 	if (ListFindItem(s.clientsds, &newSd, intcompare) == NULL) /* make sure we don't add the same socket twice */
-	{
-		int* pnewSd = (int*)malloc(sizeof(newSd));
+	{//-如果没有增加过这个套接字,下面就进行增加列表操作
+		int* pnewSd = (int*)malloc(sizeof(newSd));	//-先开辟一个内存空间
 		*pnewSd = newSd;
-		ListAppend(s.clientsds, pnewSd, sizeof(newSd));
-		FD_SET(newSd, &(s.rset_saved));
-		s.maxfdp1 = max(s.maxfdp1, newSd + 1);
+		ListAppend(s.clientsds, pnewSd, sizeof(newSd));	//-在列表中增加一个项目
+		FD_SET(newSd, &(s.rset_saved));	//-将一个给定的文件描述符加入集合之中
+		s.maxfdp1 = max(s.maxfdp1, newSd + 1);	//-返回大的数值
 		rc = Socket_setnonblocking(newSd);
 	}
 	else
@@ -185,12 +185,12 @@ int Socket_addSocket(int newSd)
  * @param write_set the socket write set (see select doc)
  * @return boolean - is the socket ready to go?
  */
-int isReady(int socket, fd_set* read_set, fd_set* write_set)
+int isReady(int socket, fd_set* read_set, fd_set* write_set)	//-判断是否准备好了
 {
 	int rc = 1;
 
 	FUNC_ENTRY;
-	if  (ListFindItem(s.connect_pending, &socket, intcompare) && FD_ISSET(socket, write_set))
+	if  (ListFindItem(s.connect_pending, &socket, intcompare) && FD_ISSET(socket, write_set))	//-检测fd在fdset集合中的状态是否变化，当检测到fd状态发生变化时返回真，否则，返回假（也可以认为集合中指定的文件描述符是否可以读写）。
 		ListRemoveItem(s.connect_pending, &socket, intcompare);
 	else
 		rc = FD_ISSET(socket, read_set) && FD_ISSET(socket, write_set) && Socket_noPendingWrites(socket);
@@ -206,7 +206,7 @@ int isReady(int socket, fd_set* read_set, fd_set* write_set)
  *  @param tp the timeout to be used for the select, unless overridden
  *  @return the socket next ready, or 0 if none is ready
  */
-int Socket_getReadySocket(int more_work, struct timeval *tp)
+int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字准备通讯的被select指示的
 {
 	int rc = 0;
 	static struct timeval zero = {0L, 0L}; /* 0 seconds */
@@ -290,7 +290,7 @@ exit:
  *  @param c the character read, returned
  *  @return completion code
  */
-int Socket_getch(int socket, char* c)
+int Socket_getch(int socket, char* c)	//-这里所有的数据都需要对队列的操作,然后再给应用程序使用,而不是直接来自套接字流
 {
 	int rc = SOCKET_ERROR;
 
@@ -328,7 +328,7 @@ exit:
  *  @param actual_len the actual number of bytes read
  *  @return completion code
  */
-char *Socket_getdata(int socket, int bytes, int* actual_len)
+char *Socket_getdata(int socket, int bytes, int* actual_len)	//-从套接字中获得一些数据
 {
 	int rc;
 	char* buf;
@@ -336,14 +336,14 @@ char *Socket_getdata(int socket, int bytes, int* actual_len)
 	FUNC_ENTRY;
 	if (bytes == 0)
 	{
-		buf = SocketBuffer_complete(socket);
+		buf = SocketBuffer_complete(socket);	//?这个套接字缓冲区没有数据了所以完成
 		goto exit;
 	}
 
 	buf = SocketBuffer_getQueuedData(socket, bytes, actual_len);
-
+	//-下面的函数才是从接收缓冲区复制数据,上面应该是在队列中寻找空间
 	if ((rc = recv(socket, buf + (*actual_len), (size_t)(bytes - (*actual_len)), 0)) == SOCKET_ERROR)
-	{
+	{//-发生错误
 		rc = Socket_error("recv - getdata", socket);
 		if (rc != EAGAIN && rc != EWOULDBLOCK)
 		{
@@ -352,18 +352,18 @@ char *Socket_getdata(int socket, int bytes, int* actual_len)
 		}
 	}
 	else if (rc == 0) /* rc 0 means the other end closed the socket, albeit "gracefully" */
-	{
+	{//-连接已中止
 		buf = NULL;
 		goto exit;
 	}
 	else
-		*actual_len += rc;
+		*actual_len += rc;	//-读入的字节数
 
 	if (*actual_len == bytes)
-		SocketBuffer_complete(socket);
+		SocketBuffer_complete(socket);	//-这里的完成可能就是封闭一个缓冲区,说明一帧内容完整了,可以开始处理了
 	else /* we didn't read the whole packet */
 	{
-		SocketBuffer_interrupted(socket, *actual_len);
+		SocketBuffer_interrupted(socket, *actual_len);	//-应该是对标志的一种处理,这样使得缓冲区能被识别在不同的状态下
 		Log(TRACE_MAX, -1, "%d bytes expected but %d bytes now received", bytes, *actual_len);
 	}
 exit:
@@ -435,27 +435,27 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)
  *  @return completion code, especially TCPSOCKET_INTERRUPTED
  */
 int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** buffers, size_t* buflens, int* frees)
-{
+{//-尝试写一系列的缓冲区到一个套接字以至于他们被作为一个帧发送出去
 	unsigned long bytes = 0L;
 	iobuf iovecs[5];
 	int frees1[5];
 	int rc = TCPSOCKET_INTERRUPTED, i, total = buf0len;
 
 	FUNC_ENTRY;
-	if (!Socket_noPendingWrites(socket))
-	{
+	if (!Socket_noPendingWrites(socket))	//-在写之前判断下是否有正准备发还没有发的
+	{//-
 		Log(LOG_SEVERE, -1, "Trying to write to socket %d for which there is already pending output", socket);
 		rc = SOCKET_ERROR;
 		goto exit;
 	}
 
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++)	//-把几个缓冲区的总长计算出来
 		total += buflens[i];
 
 	iovecs[0].iov_base = buf0;
 	iovecs[0].iov_len = buf0len;
 	frees1[0] = 1;
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++)	//-把所有缓冲区的内容换个地方存储
 	{
 		iovecs[i+1].iov_base = buffers[i];
 		iovecs[i+1].iov_len = buflens[i];
@@ -467,7 +467,7 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 		if (bytes == total)
 			rc = TCPSOCKET_COMPLETE;
 		else
-		{
+		{//-没有完成发送的后续处理
 			int* sockmem = (int*)malloc(sizeof(int));
 			Log(TRACE_MIN, -1, "Partial write: %ld bytes of %d actually written on socket %d",
 					bytes, total, socket);
@@ -496,7 +496,7 @@ exit:
  */
 void Socket_addPendingWrite(int socket)
 {
-	FD_SET(socket, &(s.pending_wset));
+	FD_SET(socket, &(s.pending_wset));	//-将一个给定的文件描述符加入集合之中
 }
 
 
@@ -504,10 +504,10 @@ void Socket_addPendingWrite(int socket)
  *  Clear a socket from the pending write list - if one was added with Socket_addPendingWrite
  *  @param socket the socket to remove
  */
-void Socket_clearPendingWrite(int socket)
-{
-	if (FD_ISSET(socket, &(s.pending_wset)))
-		FD_CLR(socket, &(s.pending_wset));
+void Socket_clearPendingWrite(int socket)	//-这些看似是针对套接字的,但实际都是本系统内逻辑处理
+{//-“FD”即为file descriptor的缩写
+	if (FD_ISSET(socket, &(s.pending_wset)))	//-检查在select函数返回后，某个描述符是否准备好，以便进行接下来的处理操作。
+		FD_CLR(socket, &(s.pending_wset));	//-将一个给定的文件描述符从集合中删除
 }
 
 
@@ -516,7 +516,7 @@ void Socket_clearPendingWrite(int socket)
  *  @param socket the socket to close
  *  @return completion code
  */
-int Socket_close_only(int socket)
+int Socket_close_only(int socket)	//-在套接字上实现关闭,但是还没有清空在列表中的属性
 {
 	int rc;
 
@@ -527,7 +527,7 @@ int Socket_close_only(int socket)
 	if ((rc = closesocket(socket)) == SOCKET_ERROR)
 		Socket_error("close", socket);
 #else
-	if (shutdown(socket, SHUT_WR) == SOCKET_ERROR)
+	if (shutdown(socket, SHUT_WR) == SOCKET_ERROR)	//-实现半开放Socket:调用shutdown()时只有在缓存中的数据全部发送成功后才会返回
 		Socket_error("shutdown", socket);
 	if ((rc = recv(socket, NULL, (size_t)0, 0)) == SOCKET_ERROR)
 		Socket_error("shutdown", socket);
@@ -544,7 +544,7 @@ int Socket_close_only(int socket)
  *  @param socket the socket to close
  *  @return completion code
  */
-void Socket_close(int socket)
+void Socket_close(int socket)	//-本身套接字的关闭很简单,但是在这个系统中还有自己的一套
 {
 	FUNC_ENTRY;
 	Socket_close_only(socket);
@@ -703,7 +703,7 @@ void Socket_setWriteCompleteCallback(Socket_writeComplete* mywritecomplete)
  *  @param socket that socket
  *  @return completion code
  */
-int Socket_continueWrite(int socket)
+int Socket_continueWrite(int socket)	//-针对一个的写
 {
 	int rc = 0;
 	pending_writes* pw;
@@ -770,7 +770,7 @@ exit:
  *  @param pwset the set of sockets
  *  @return completion code
  */
-int Socket_continueWrites(fd_set* pwset)
+int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字
 {
 	int rc1 = 0;
 	ListElement* curpending = s.write_pending->first;
@@ -780,7 +780,7 @@ int Socket_continueWrites(fd_set* pwset)
 	{
 		int socket = *(int*)(curpending->content);
 		if (FD_ISSET(socket, pwset) && Socket_continueWrite(socket))
-		{
+		{//-下面判断写失败的原因
 			if (!SocketBuffer_writeComplete(socket))
 				Log(LOG_SEVERE, -1, "Failed to remove pending write from socket buffer list");
 			FD_CLR(socket, &(s.pending_wset));
@@ -808,7 +808,7 @@ int Socket_continueWrites(fd_set* pwset)
  *  @param sock socket
  *  @return the peer information
  */
-char* Socket_getaddrname(struct sockaddr* sa, int sock)
+char* Socket_getaddrname(struct sockaddr* sa, int sock)	//-将数字地址转换为字符串
 {
 /**
  * maximum length of the address string
@@ -843,7 +843,7 @@ char* Socket_getaddrname(struct sockaddr* sa, int sock)
  *  @param sock the socket to inquire on
  *  @return the peer information
  */
-char* Socket_getpeer(int sock)
+char* Socket_getpeer(int sock)	//-得到其它结束连接到一个套接字的信息
 {
 	struct sockaddr_in6 sa;
 	socklen_t sal = sizeof(sa);
