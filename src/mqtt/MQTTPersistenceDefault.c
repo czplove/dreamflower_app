@@ -14,7 +14,7 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *    Ian Craggs - async client updates
  *******************************************************************************/
-
+//-持久实现的文件系统,这个文件为MQTT协议创建了一个文件系统,有目录的概念
 /**
  * @file
  * \brief A file system based persistence implementation.
@@ -72,13 +72,13 @@ int pstopen(void **handle, const char* clientID, const char* serverURI, void* co
 	FUNC_ENTRY;
 	/* Note that serverURI=address:port, but ":" not allowed in Windows directories */
 	perserverURI = malloc(strlen(serverURI) + 1);
-	strcpy(perserverURI, serverURI);
-	ptraux = strstr(perserverURI, ":");
-	*ptraux = '-' ;
+	strcpy(perserverURI, serverURI);	//-把从src地址开始且含有'\0'结束符的字符串复制到以dest开始的地址空间
+	ptraux = strstr(perserverURI, ":");	//-用于判断字符串str2是否是str1的子串。如果是，则该函数返回str2在str1中首次出现的地址；否则，返回NULL。
+	*ptraux = '-' ;	//-代替原来的:
 
 	/* consider '/'  +  '-'  +  '\0' */
 	clientDir = malloc(strlen(dataDir) + strlen(clientID) + strlen(perserverURI) + 3);
-	sprintf(clientDir, "%s/%s-%s", dataDir, clientID, perserverURI);
+	sprintf(clientDir, "%s/%s-%s", dataDir, clientID, perserverURI);	//-形成了所需要的名字
 
 
 	/* create clientDir directory */
@@ -90,7 +90,7 @@ int pstopen(void **handle, const char* clientID, const char* serverURI, void* co
 	pTokDirName = (char*)malloc( strlen(clientDir) + 1 );
 	strcpy( pTokDirName, clientDir );
 
-	pToken = strtok_r( pTokDirName, "\\/", &save_ptr );
+	pToken = strtok_r( pTokDirName, "\\/", &save_ptr );	//-用于分割字符串。
 
 	strcpy( pCrtDirName, pToken );
 	rc = pstmkdir( pCrtDirName );
@@ -116,7 +116,7 @@ int pstopen(void **handle, const char* clientID, const char* serverURI, void* co
 /** Function to create a directory.
  * Returns 0 on success or if the directory already exists.
  */
-int pstmkdir( char *pPathname )
+int pstmkdir( char *pPathname )	//?创建一个持久目录
 {
 	int rc = 0;
 
@@ -126,7 +126,7 @@ int pstmkdir( char *pPathname )
 	{
 #else
 	/* Create a directory with read, write and execute access for the owner and read access for the group */
-	if ( mkdir( pPathname, S_IRWXU | S_IRGRP ) != 0 )
+	if ( mkdir( pPathname, S_IRWXU | S_IRGRP ) != 0 )	//-创建目录
 	{
 #endif
 		if ( errno != EEXIST )
@@ -142,7 +142,7 @@ int pstmkdir( char *pPathname )
 /** Write wire message to the client persistence directory.
  *  See ::Persistence_put
  */
-int pstput(void* handle, char* key, int bufcount, char* buffers[], int buflens[])
+int pstput(void* handle, char* key, int bufcount, char* buffers[], int buflens[])	//-意思和下面的没有什么区别一目了然,细节再说
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -193,7 +193,7 @@ exit:
 /** Retrieve a wire message from the client persistence directory.
  *  See ::Persistence_get
  */
-int pstget(void* handle, char* key, char** buffer, int* buflen)
+int pstget(void* handle, char* key, char** buffer, int* buflen)	//-从客户端持久目录里重新获得一个信息
 {
 	int rc = 0;
 	FILE *fp;
@@ -244,7 +244,7 @@ exit:
 /** Delete a persisted message from the client persistence directory.
  *  See ::Persistence_remove
  */
-int pstremove(void* handle, char* key)
+int pstremove(void* handle, char* key)	//-删除来自客户端持久目录的一个持久信息
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -259,13 +259,13 @@ int pstremove(void* handle, char* key)
 
 	/* consider '/' + '\0' */
 	file = malloc(strlen(clientDir) + strlen(key) + strlen(MESSAGE_FILENAME_EXTENSION) + 2);
-	sprintf(file, "%s/%s%s", clientDir, key, MESSAGE_FILENAME_EXTENSION);
+	sprintf(file, "%s/%s%s", clientDir, key, MESSAGE_FILENAME_EXTENSION);	//-就是格式化输出而已,输出的位置不同将决定显示的方式
 
 #if defined(WIN32) || defined(WIN64)
 	if ( _unlink(file) != 0 )
 	{
 #else
-	if ( unlink(file) != 0 )
+	if ( unlink(file) != 0 )	//-删除一个文件的目录项并减少它的链接数，若成功则返回0，否则返回-1，错误原因存于errno。
 	{
 #endif
 		if ( errno != ENOENT )
@@ -283,7 +283,7 @@ exit:
 /** Delete client persistence directory (if empty).
  *  See ::Persistence_close
  */
-int pstclose(void* handle)
+int pstclose(void* handle)	//-删除客户端持久的目录,如果为空的话
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -299,7 +299,7 @@ int pstclose(void* handle)
 	if ( _rmdir(clientDir) != 0 )
 	{
 #else
-	if ( rmdir(clientDir) != 0 )
+	if ( rmdir(clientDir) != 0 )	//-删除空目录,如果不是空的不能删除
 	{
 #endif
 		if ( errno != ENOENT && errno != ENOTEMPTY )
@@ -317,7 +317,7 @@ exit:
 /** Returns whether if a wire message is persisted in the client persistence directory.
  * See ::Persistence_containskey
  */
-int pstcontainskey(void *handle, char *key)
+int pstcontainskey(void *handle, char *key)	//-返回信息是否是持久的,在客户端持久目录下
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -386,7 +386,7 @@ int containskeyWin32(char *dirname, char *key)
 	return notFound;
 }
 #else
-int containskeyUnix(char *dirname, char *key)
+int containskeyUnix(char *dirname, char *key)	//?包含 在里面查找,找到需要的结束,找到了说明包含
 {
 	int notFound = MQTTCLIENT_PERSISTENCE_ERROR;
 	char *filekey, *ptraux;
@@ -402,16 +402,16 @@ int containskeyUnix(char *dirname, char *key)
 			char* filename = malloc(strlen(dirname) + strlen(dir_entry->d_name) + 2);
 			sprintf(filename, "%s/%s", dirname, dir_entry->d_name);
 			lstat(filename, &stat_info);
-			free(filename);
+			free(filename);	//-释放了这块内存，让它重新得到自由。
 			if(S_ISREG(stat_info.st_mode))
 			{
 				filekey = malloc(strlen(dir_entry->d_name) + 1);
 				strcpy(filekey, dir_entry->d_name);
-				ptraux = strstr(filekey, MESSAGE_FILENAME_EXTENSION);
+				ptraux = strstr(filekey, MESSAGE_FILENAME_EXTENSION);	//-用于判断字符串str2是否是str1的子串。如果是，则该函数返回str2在str1中首次出现的地址；否则，返回NULL。
 				if ( ptraux != NULL )
-					*ptraux = '\0' ;
-				if(strcmp(filekey, key) == 0)
-					notFound = 0;
+					*ptraux = '\0' ;	//-其实这里实现的功能就是去掉一部分信息
+				if(strcmp(filekey, key) == 0)	//-若str1=str2，则返回零；
+					notFound = 0;	//-说明寻找到需要的了
 				free(filekey);
 			}
 		}
@@ -427,7 +427,7 @@ int containskeyUnix(char *dirname, char *key)
 /** Delete all the persisted message in the client persistence directory.
  * See ::Persistence_clear
  */
-int pstclear(void *handle)
+int pstclear(void *handle)	//-删除所有持久化消息在客户端持久性目录。说明很多信息都是以文件的形式存储的,所以需要通过这个清空
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -495,7 +495,7 @@ int clearWin32(char *dirname)
 	return rc;
 }
 #else
-int clearUnix(char *dirname)
+int clearUnix(char *dirname)	//-删除文件或目录,这个能删除很多
 {
 	int rc = 0;
 	DIR *dp;
@@ -510,7 +510,7 @@ int clearUnix(char *dirname)
 			lstat(dir_entry->d_name, &stat_info);
 			if(S_ISREG(stat_info.st_mode))
 			{
-				if ( remove(dir_entry->d_name) != 0 )
+				if ( remove(dir_entry->d_name) != 0 )	//-删除文件或目录
 					rc = MQTTCLIENT_PERSISTENCE_ERROR;
 			}
 		}
@@ -527,7 +527,7 @@ int clearUnix(char *dirname)
 /** Returns the keys (file names w/o the extension) in the client persistence directory.
  *  See ::Persistence_keys
  */
-int pstkeys(void *handle, char ***keys, int *nkeys)
+int pstkeys(void *handle, char ***keys, int *nkeys)	//-实现类似ls命令效果的功能,可能就多了一个增加扩展名
 {
 	int rc = 0;
 	char *clientDir = handle;
@@ -630,7 +630,7 @@ exit:
 	return rc;
 }
 #else
-int keysUnix(char *dirname, char ***keys, int *nkeys)
+int keysUnix(char *dirname, char ***keys, int *nkeys)	//-获得一定目录下的文件名然后增加扩展名,为什么
 {
 	int rc = 0;
 	char **fkeys = NULL;
@@ -643,21 +643,21 @@ int keysUnix(char *dirname, char ***keys, int *nkeys)
 
 	FUNC_ENTRY;
 	/* get number of keys */
-	if((dp = opendir(dirname)) != NULL)
+	if((dp = opendir(dirname)) != NULL)	//-打开一个目录，在失败的时候返回一个空的指针。
 	{
-		while((dir_entry = readdir(dp)) != NULL)
+		while((dir_entry = readdir(dp)) != NULL)	//-读取目录,就读取了这个目录下的所有东西名字
 		{
 			char* temp = malloc(strlen(dirname)+strlen(dir_entry->d_name)+2);
 
-			sprintf(temp, "%s/%s", dirname, dir_entry->d_name);
-			if (lstat(temp, &stat_info) == 0 && S_ISREG(stat_info.st_mode))
-				nfkeys++;
+			sprintf(temp, "%s/%s", dirname, dir_entry->d_name);	//-记录下目录中的名字,形成类似ls命令的效果
+			if (lstat(temp, &stat_info) == 0 && S_ISREG(stat_info.st_mode))	//-lstat，是一种文件描述词。意思是获取一些文件相关的信息。S_ISREG是否是一个常规文件
+				nfkeys++;	//-寻找到常规文件就加1
 			free(temp);
 		}
 		closedir(dp);
 	} else
 	{
-		rc = MQTTCLIENT_PERSISTENCE_ERROR;
+		rc = MQTTCLIENT_PERSISTENCE_ERROR;	//-打开路径识别了叫持续失败什么意思啊
 		goto exit;
 	}
 
@@ -675,10 +675,10 @@ int keysUnix(char *dirname, char ***keys, int *nkeys)
 	
 				sprintf(temp, "%s/%s", dirname, dir_entry->d_name);
 				if (lstat(temp, &stat_info) == 0 && S_ISREG(stat_info.st_mode))
-				{
+				{//-如果是常规文件的话
 					fkeys[i] = malloc(strlen(dir_entry->d_name) + 1);
 					strcpy(fkeys[i], dir_entry->d_name);
-					ptraux = strstr(fkeys[i], MESSAGE_FILENAME_EXTENSION);
+					ptraux = strstr(fkeys[i], MESSAGE_FILENAME_EXTENSION);	//-增加扩展名
 					if ( ptraux != NULL )
 						*ptraux = '\0' ;
 					i++;
@@ -704,7 +704,7 @@ exit:
 #endif
 
 
-
+//-下面这个是很好的测试模块思路
 #if defined(UNIT_TESTS)
 int main (int argc, char *argv[])
 {

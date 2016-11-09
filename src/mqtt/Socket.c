@@ -58,7 +58,7 @@ static fd_set wset;
  * @param sock the socket to set non-blocking
  * @return TCP call error code
  */
-int Socket_setnonblocking(int sock)
+int Socket_setnonblocking(int sock)	//-设置文件的属性
 {
 	int rc;
 #if defined(WIN32) || defined(WIN64)
@@ -70,9 +70,9 @@ int Socket_setnonblocking(int sock)
 	int flags;
 
 	FUNC_ENTRY;
-	if ((flags = fcntl(sock, F_GETFL, 0)))
+	if ((flags = fcntl(sock, F_GETFL, 0)))	//-fcntl()用来操作文件描述符的一些特性。F_GETFL 取得文件描述符状态旗标，此旗标为open（）的参数flags。
 		flags = 0;
-	rc = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+	rc = fcntl(sock, F_SETFL, flags | O_NONBLOCK);	//-F_SETFL 设置文件描述符状态旗标，参数arg为新旗标，但只允许O_APPEND、O_NONBLOCK和O_ASYNC位的改变，其他位的改变将不受影响。
 #endif
 	FUNC_EXIT_RC(rc);
 	return rc;
@@ -85,7 +85,7 @@ int Socket_setnonblocking(int sock)
  * @param sock the socket on which the error occurred
  * @return the specific TCP error code
  */
-int Socket_error(char* aString, int sock)
+int Socket_error(char* aString, int sock)	//-获得相应错误套接字的错误类型
 {
 #if defined(WIN32) || defined(WIN64)
 	int errno;
@@ -95,8 +95,8 @@ int Socket_error(char* aString, int sock)
 #if defined(WIN32) || defined(WIN64)
 	errno = WSAGetLastError();
 #endif
-	if (errno != EINTR && errno != EAGAIN && errno != EINPROGRESS && errno != EWOULDBLOCK)
-	{
+	if (errno != EINTR && errno != EAGAIN && errno != EINPROGRESS && errno != EWOULDBLOCK)	//-错误报告,
+	{//-所有错误码都是正整数,通过这些可以知道什么错误
 		if (strcmp(aString, "shutdown") != 0 || (errno != ENOTCONN && errno != ECONNRESET))
 			Log(TRACE_MINIMUM, -1, "Socket error %s in %s for socket %d", strerror(errno), aString, sock);
 	}

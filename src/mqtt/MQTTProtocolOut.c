@@ -136,7 +136,7 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
  * @param sock the socket on which the packet was received
  * @return completion code
  */
-int MQTTProtocol_handlePingresps(void* pack, int sock)
+int MQTTProtocol_handlePingresps(void* pack, int sock)	//-这里都是处理各种帧的,而这些中都已经是识别出协议层了
 {
 	Clients* client = NULL;
 	int rc = TCPSOCKET_COMPLETE;
@@ -144,7 +144,7 @@ int MQTTProtocol_handlePingresps(void* pack, int sock)
 	FUNC_ENTRY;
 	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);
 	Log(LOG_PROTOCOL, 21, NULL, sock, client->clientID);
-	client->ping_outstanding = 0;
+	client->ping_outstanding = 0;	//-可能就是设置下标识位就可以知道对于信息了
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
@@ -157,13 +157,13 @@ int MQTTProtocol_handlePingresps(void* pack, int sock)
  * @param qoss corresponding list of QoSs
  * @return completion code
  */
-int MQTTProtocol_subscribe(Clients* client, List* topics, List* qoss, int msgID)
+int MQTTProtocol_subscribe(Clients* client, List* topics, List* qoss, int msgID)	//-MQTT外向订阅客户端处理
 {
 	int rc = 0;
 
 	FUNC_ENTRY;
-	/* we should stack this up for retry processing too */
-	rc = MQTTPacket_send_subscribe(topics, qoss, msgID, 0, &client->net, client->clientID);
+	/* we should stack this up for retry processing too */	//-我们也应该堆栈重试处理这个
+	rc = MQTTPacket_send_subscribe(topics, qoss, msgID, 0, &client->net, client->clientID);	//-发送订阅
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
@@ -175,7 +175,7 @@ int MQTTProtocol_subscribe(Clients* client, List* topics, List* qoss, int msgID)
  * @param sock the socket on which the packet was received
  * @return completion code
  */
-int MQTTProtocol_handleSubacks(void* pack, int sock)
+int MQTTProtocol_handleSubacks(void* pack, int sock)	//-处理一个输入的发布应答帧
 {
 	Suback* suback = (Suback*)pack;
 	Clients* client = NULL;
@@ -184,7 +184,7 @@ int MQTTProtocol_handleSubacks(void* pack, int sock)
 	FUNC_ENTRY;
 	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);
 	Log(LOG_PROTOCOL, 23, NULL, sock, client->clientID, suback->msgId);
-	MQTTPacket_freeSuback(suback);
+	MQTTPacket_freeSuback(suback);	//-释放存储空间,这里有一个很重要的思想,为什么都要对内存释放
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
@@ -196,13 +196,13 @@ int MQTTProtocol_handleSubacks(void* pack, int sock)
  * @param topics list of topics
  * @return completion code
  */
-int MQTTProtocol_unsubscribe(Clients* client, List* topics, int msgID)
+int MQTTProtocol_unsubscribe(Clients* client, List* topics, int msgID)	//?不发布
 {
 	int rc = 0;
 
 	FUNC_ENTRY;
 	/* we should stack this up for retry processing too? */
-	rc = MQTTPacket_send_unsubscribe(topics, msgID, 0, &client->net, client->clientID);
+	rc = MQTTPacket_send_unsubscribe(topics, msgID, 0, &client->net, client->clientID);	//-发送一个帧到一个套接字
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
@@ -214,8 +214,8 @@ int MQTTProtocol_unsubscribe(Clients* client, List* topics, int msgID)
  * @param sock the socket on which the packet was received
  * @return completion code
  */
-int MQTTProtocol_handleUnsubacks(void* pack, int sock)
-{
+int MQTTProtocol_handleUnsubacks(void* pack, int sock)	//-发布帧 帧被接收的套接字
+{//?处理没有订阅的帧
 	Unsuback* unsuback = (Unsuback*)pack;
 	Clients* client = NULL;
 	int rc = TCPSOCKET_COMPLETE;

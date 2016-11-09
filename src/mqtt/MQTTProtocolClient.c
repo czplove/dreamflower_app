@@ -53,7 +53,7 @@ extern ClientStates* bstate;
  * @param b second integer value
  * @return boolean indicating whether a and b are equal
  */
-int messageIDCompare(void* a, void* b)
+int messageIDCompare(void* a, void* b)	//-对这样的东西进行比较,
 {
 	Messages* msg = (Messages*)a;
 	return msg->msgid == *(int*)b;
@@ -66,14 +66,14 @@ int messageIDCompare(void* a, void* b)
  * @param client a client structure
  * @return the next message id to use, or 0 if none available
  */
-int MQTTProtocol_assignMsgId(Clients* client)
+int MQTTProtocol_assignMsgId(Clients* client)	//-为客户端分配一个新的信息ID
 {
 	int start_msgid = client->msgID;
 	int msgid = start_msgid;
 
 	FUNC_ENTRY;
 	msgid = (msgid == MAX_MSG_ID) ? 1 : msgid + 1;
-	while (ListFindItem(client->outboundMsgs, &msgid, messageIDCompare) != NULL)
+	while (ListFindItem(client->outboundMsgs, &msgid, messageIDCompare) != NULL)	//-又得查列表
 	{
 		msgid = (msgid == MAX_MSG_ID) ? 1 : msgid + 1;
 		if (msgid == start_msgid) 
@@ -83,13 +83,13 @@ int MQTTProtocol_assignMsgId(Clients* client)
 		}
 	}
 	if (msgid != 0)
-		client->msgID = msgid;
+		client->msgID = msgid;	//-记录的是信息ID,这个是唯一的
 	FUNC_EXIT_RC(msgid);
 	return msgid;
 }
 
 
-void MQTTProtocol_storeQoS0(Clients* pubclient, Publish* publish)
+void MQTTProtocol_storeQoS0(Clients* pubclient, Publish* publish)	//-这里的发布可能比较简单仅仅送出去就行,不需要复杂的处理:至多一次
 {
 	int len;
 	pending_write* pw = NULL;
@@ -117,7 +117,7 @@ void MQTTProtocol_storeQoS0(Clients* pubclient, Publish* publish)
  * @param retained boolean - whether to set the MQTT retained flag
  * @return the completion code
  */
-int MQTTProtocol_startPublishCommon(Clients* pubclient, Publish* publish, int qos, int retained)
+int MQTTProtocol_startPublishCommon(Clients* pubclient, Publish* publish, int qos, int retained)	//-通用处理
 {
 	int rc = TCPSOCKET_COMPLETE;
 
@@ -139,16 +139,16 @@ int MQTTProtocol_startPublishCommon(Clients* pubclient, Publish* publish, int qo
  * @param mm - pointer to the message to send
  * @return the completion code
  */
-int MQTTProtocol_startPublish(Clients* pubclient, Publish* publish, int qos, int retained, Messages** mm)
+int MQTTProtocol_startPublish(Clients* pubclient, Publish* publish, int qos, int retained, Messages** mm)	//-开始启动发布
 {
 	Publish p = *publish;
 	int rc = 0;
 
 	FUNC_ENTRY;
-	if (qos > 0)
+	if (qos > 0)	//-0 至多一次,1 至少一次,2 只有一次
 	{
-		*mm = MQTTProtocol_createMessage(publish, mm, qos, retained);
-		ListAppend(pubclient->outboundMsgs, *mm, (*mm)->len);
+		*mm = MQTTProtocol_createMessage(publish, mm, qos, retained);	//-首先创建消息
+		ListAppend(pubclient->outboundMsgs, *mm, (*mm)->len);	//-然后加入列表管理
 		/* we change these pointers to the saved message location just in case the packet could not be written
 		entirely; the socket buffer will use these locations to finish writing the packet */
 		p.payload = (*mm)->publish->payload;
@@ -168,7 +168,7 @@ int MQTTProtocol_startPublish(Clients* pubclient, Publish* publish, int qos, int
  * @param retained boolean - whether to set the MQTT retained flag
  * @return pointer to the message data stored
  */
-Messages* MQTTProtocol_createMessage(Publish* publish, Messages **mm, int qos, int retained)
+Messages* MQTTProtocol_createMessage(Publish* publish, Messages **mm, int qos, int retained)	//-创建了一个信息
 {
 	Messages* m = malloc(sizeof(Messages));
 
@@ -203,7 +203,7 @@ Messages* MQTTProtocol_createMessage(Publish* publish, Messages **mm, int qos, i
  * @param len returned length of the data stored
  * @return the publication stored
  */
-Publications* MQTTProtocol_storePublication(Publish* publish, int* len)
+Publications* MQTTProtocol_storePublication(Publish* publish, int* len)	//-对信息进行存储,以便可能的重发
 {
 	Publications* p = malloc(sizeof(Publications));
 
@@ -505,7 +505,7 @@ int MQTTProtocol_handlePubcomps(void* pack, int sock)
  * MQTT protocol keepAlive processing.  Sends PINGREQ packets as required.
  * @param now current time
  */
-void MQTTProtocol_keepalive(time_t now)
+void MQTTProtocol_keepalive(time_t now)	//-通过调用这个子函数,可以使这个保持活跃状态
 {
 	ListElement* current = NULL;
 
@@ -552,7 +552,7 @@ void MQTTProtocol_keepalive(time_t now)
  * @param client - the client to which to apply the retry processing
  * @param regardless boolean - retry packets regardless of retry interval (used on reconnect)
  */
-void MQTTProtocol_retries(time_t now, Clients* client, int regardless)
+void MQTTProtocol_retries(time_t now, Clients* client, int regardless)	//-每个客户端重试处理
 {
 	ListElement* outcurrent = NULL;
 
@@ -622,14 +622,14 @@ exit:
  * @param doRetry boolean - retries as well as pending writes?
  * @param regardless boolean - retry packets regardless of retry interval (used on reconnect)
  */
-void MQTTProtocol_retry(time_t now, int doRetry, int regardless)
+void MQTTProtocol_retry(time_t now, int doRetry, int regardless)	//-再次重试协议和套接字悬挂的写处理
 {
 	ListElement* current = NULL;
 
 	FUNC_ENTRY;
 	ListNextElement(bstate->clients, &current);
 	/* look through the outbound message list of each client, checking to see if a retry is necessary */
-	while (current)
+	while (current)	//-通过查询标识位,看看是否有必要重试写
 	{
 		Clients* client = (Clients*)(current->content);
 		ListNextElement(bstate->clients, &current);
@@ -653,7 +653,7 @@ void MQTTProtocol_retry(time_t now, int doRetry, int regardless)
  * Free a client structure
  * @param client the client data to free
  */
-void MQTTProtocol_freeClient(Clients* client)
+void MQTTProtocol_freeClient(Clients* client)	//-释放了客户结构体,对于程序而已可能就释放了客户端了
 {
 	FUNC_ENTRY;
 	/* free up pending message lists here, and any other allocated data */
@@ -692,12 +692,12 @@ void MQTTProtocol_freeClient(Clients* client)
  * Empty a message list, leaving it able to accept new messages
  * @param msgList the message list to empty
  */
-void MQTTProtocol_emptyMessageList(List* msgList)
+void MQTTProtocol_emptyMessageList(List* msgList)	//-清空一个消息队列,使得她可以获得新的消息
 {
 	ListElement* current = NULL;
 
 	FUNC_ENTRY;
-	while (ListNextElement(msgList, &current))
+	while (ListNextElement(msgList, &current))	//-是否可以通过这个猜测到消息是通过队列来存储并管理的
 	{
 		Messages* m = (Messages*)(current->content);
 		MQTTProtocol_removePublication(m->publish);
@@ -711,7 +711,7 @@ void MQTTProtocol_emptyMessageList(List* msgList)
  * Empty and free up all storage used by a message list
  * @param msgList the message list to empty and free
  */
-void MQTTProtocol_freeMessageList(List* msgList)
+void MQTTProtocol_freeMessageList(List* msgList)	//-清空所有的被一个消息队列使用的仓库
 {
 	FUNC_ENTRY;
 	MQTTProtocol_emptyMessageList(msgList);
@@ -728,7 +728,7 @@ void MQTTProtocol_freeMessageList(List* msgList)
 * @param dest_size the size of the memory pointed to by dest: copy no more than this -1 (allow for null).  Must be >= 1
 * @return the destination string pointer
 */
-char* MQTTStrncpy(char *dest, const char *src, size_t dest_size)
+char* MQTTStrncpy(char *dest, const char *src, size_t dest_size)	//-没有什么特殊的就是复制内容到另一个地方
 {
   size_t count = dest_size;
   char *temp = dest;
@@ -753,7 +753,7 @@ char* MQTTStrncpy(char *dest, const char *src, size_t dest_size)
 * @param src the source string which characters copy from
 * @return the duplicated, allocated string
 */
-char* MQTTStrdup(const char* src)
+char* MQTTStrdup(const char* src)	//-复制字符串,分配在堆的空间上
 {
 	size_t mlen = strlen(src) + 1;
 	char* temp = malloc(mlen);
