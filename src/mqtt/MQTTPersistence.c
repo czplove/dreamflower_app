@@ -15,7 +15,7 @@
  *    Ian Craggs - async client updates
  *    Ian Craggs - fix for bug 432903 - queue persistence
  *******************************************************************************/
-
+//-这个文件的内容是应用到持久化操作的,所谓的持久化是不是就是以文件形式长期存储?
 /**
  * @file
  * \brief Functions that apply to persistence operations.
@@ -40,7 +40,7 @@
  */
 #include "StackTrace.h"
 
-int MQTTPersistence_create(MQTTClient_persistence** persistence, int type, void* pcontext)
+int MQTTPersistence_create(MQTTClient_persistence** persistence, int type, void* pcontext)	//-创建一个结构体代表一个持久的实现
 {
 	int rc = 0;
 	MQTTClient_persistence* per = NULL;
@@ -102,7 +102,7 @@ int MQTTPersistence_create(MQTTClient_persistence** persistence, int type, void*
  * @param serverURI the URI of the remote end.
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
-int MQTTPersistence_initialize(Clients *c, const char *serverURI)
+int MQTTPersistence_initialize(Clients *c, const char *serverURI)	//-打开持久存储和恢复一些持久信息
 {
 	int rc = 0;
 
@@ -124,7 +124,7 @@ int MQTTPersistence_initialize(Clients *c, const char *serverURI)
  * @param client the client as ::Clients.
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
-int MQTTPersistence_close(Clients *c)
+int MQTTPersistence_close(Clients *c)	//-关闭持久存储
 {
 	int rc =0;
 
@@ -149,7 +149,7 @@ int MQTTPersistence_close(Clients *c)
  * @param client the client as ::Clients.
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
-int MQTTPersistence_clear(Clients *c)
+int MQTTPersistence_clear(Clients *c)	//-清除持久存储
 {
 	int rc = 0;
 
@@ -168,7 +168,7 @@ int MQTTPersistence_clear(Clients *c)
  * @param client the client as ::Clients.
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
-int MQTTPersistence_restore(Clients *c)
+int MQTTPersistence_restore(Clients *c)	//-恢复持久记录到客户端的输出和输入消息队列
 {
 	int rc = 0;
 	char **msgkeys = NULL,
@@ -264,7 +264,7 @@ int MQTTPersistence_restore(Clients *c)
  * @param buffer the persisted data.
  * @param buflen the number of bytes of the data buffer.
  */
-void* MQTTPersistence_restorePacket(char* buffer, size_t buflen)
+void* MQTTPersistence_restorePacket(char* buffer, size_t buflen)	//-从持久数据里面恢复一个MQTT帧
 {
 	void* pack = NULL;
 	Header header;
@@ -282,9 +282,9 @@ void* MQTTPersistence_restorePacket(char* buffer, size_t buflen)
 		remaining_length += (c & 127) * multiplier;
 		multiplier *= 128;
 		fixed_header_length++;
-	} while ((c & 128) != 0);
+	} while ((c & 128) != 0);	//-根据MQTT算法解码消息长度
 
-	if ( (fixed_header_length + remaining_length) == buflen )
+	if ( (fixed_header_length + remaining_length) == buflen )	//-固定长度 剩余长度
 	{
 		ptype = header.bits.type;
 		if (ptype >= CONNECT && ptype <= DISCONNECT && new_packets[ptype] != NULL)
@@ -302,7 +302,7 @@ void* MQTTPersistence_restorePacket(char* buffer, size_t buflen)
  * @param content the message to add.
  * @param size size of the message.
  */
-void MQTTPersistence_insertInOrder(List* list, void* content, size_t size)
+void MQTTPersistence_insertInOrder(List* list, void* content, size_t size)	//-插入指定的消息进入队列,还需要维护消息ID的秩序
 {
 	ListElement* index = NULL;
 	ListElement* current = NULL;
@@ -314,7 +314,7 @@ void MQTTPersistence_insertInOrder(List* list, void* content, size_t size)
 			index = current;
 	}
 
-	ListInsert(list, content, size, index);
+	ListInsert(list, content, size, index);	//-维护消息ID的秩序
 	FUNC_EXIT;
 }
 
@@ -335,7 +335,7 @@ void MQTTPersistence_insertInOrder(List* list, void* content, size_t size)
  */
 int MQTTPersistence_put(int socket, char* buf0, size_t buf0len, int count,
 								 char** buffers, size_t* buflens, int htype, int msgId, int scr )
-{
+{//-增加一个记录到持久存储中.而这个对于QoS0不是必须的.
 	int rc = 0;
 	extern ClientStates* bstate;
 	int nbufs, i;
@@ -345,7 +345,7 @@ int MQTTPersistence_put(int socket, char* buf0, size_t buf0len, int count,
 	Clients* client = NULL;
 
 	FUNC_ENTRY;
-	client = (Clients*)(ListFindItem(bstate->clients, &socket, clientSocketCompare)->content);
+	client = (Clients*)(ListFindItem(bstate->clients, &socket, clientSocketCompare)->content);	//-寻找一个指定的客户端,然后增加记录
 	if (client->persistence != NULL)
 	{
 		key = malloc(MESSAGE_FILENAME_LENGTH + 1);
@@ -370,10 +370,10 @@ int MQTTPersistence_put(int socket, char* buf0, size_t buf0len, int count,
 		}
 		if ( scr == 1 )  /* receiving PUBLISH QoS2 */
 			sprintf(key, "%s%d", PERSISTENCE_PUBLISH_RECEIVED, msgId);
-
+		//-上面就是为了增加申请内存,所谓的key也就是一个标志而已
 		rc = client->persistence->pput(client->phandle, key, nbufs, bufs, lens);
 
-		free(key);
+		free(key);	//-*静态内存对于裸机关系不大,但是系统的话特别有意义
 		free(lens);
 		free(bufs);
 	}
@@ -392,12 +392,12 @@ int MQTTPersistence_put(int socket, char* buf0, size_t buf0len, int count,
  * @param msgId the message ID.
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
-int MQTTPersistence_remove(Clients* c, char *type, int qos, int msgId)
+int MQTTPersistence_remove(Clients* c, char *type, int qos, int msgId)	//-从持久存储中删除一个记录
 {
 	int rc = 0;
 
 	FUNC_ENTRY;
-	if (c->persistence != NULL)
+	if (c->persistence != NULL)	//-标志代表有无
 	{
 		char *key = malloc(MESSAGE_FILENAME_LENGTH + 1);
 		if ( (strcmp(type,PERSISTENCE_PUBLISH_SENT) == 0) && qos == 2 )
@@ -425,13 +425,13 @@ int MQTTPersistence_remove(Clients* c, char *type, int qos, int msgId)
  * message IDs in the outboundMsgs queue.
  * @param client the client as ::Clients.
  */
-void MQTTPersistence_wrapMsgID(Clients *client)
+void MQTTPersistence_wrapMsgID(Clients *client)	//-检查消息id是否包装通过寻找最大的差距两个连续outboundMsgs队列中的消息id
 {
 	ListElement* wrapel = NULL;
 	ListElement* current = NULL;
 
 	FUNC_ENTRY;
-	if ( client->outboundMsgs->count > 0 )
+	if ( client->outboundMsgs->count > 0 )	//-检查是否被覆盖
 	{
 		int firstMsgID = ((Messages*)client->outboundMsgs->first->content)->msgid;
 		int lastMsgID = ((Messages*)client->outboundMsgs->last->content)->msgid;
@@ -452,7 +452,7 @@ void MQTTPersistence_wrapMsgID(Clients *client)
 	}
 
 	if ( wrapel != NULL )
-	{
+	{//-进入说明被覆盖了,然后需要对序列进行处理
 		/* put wrapel at the beginning of the queue */
 		client->outboundMsgs->first->prev = client->outboundMsgs->last;
 		client->outboundMsgs->last->next = client->outboundMsgs->first;
@@ -466,7 +466,7 @@ void MQTTPersistence_wrapMsgID(Clients *client)
 
 
 #if !defined(NO_PERSISTENCE)
-int MQTTPersistence_unpersistQueueEntry(Clients* client, MQTTPersistence_qEntry* qe)
+int MQTTPersistence_unpersistQueueEntry(Clients* client, MQTTPersistence_qEntry* qe)	//-从持久队列中移除一个的入口
 {
 	int rc = 0;
 	char key[PERSISTENCE_MAX_KEY_LENGTH + 1];
@@ -480,7 +480,7 @@ int MQTTPersistence_unpersistQueueEntry(Clients* client, MQTTPersistence_qEntry*
 }
 
 
-int MQTTPersistence_persistQueueEntry(Clients* aclient, MQTTPersistence_qEntry* qe)
+int MQTTPersistence_persistQueueEntry(Clients* aclient, MQTTPersistence_qEntry* qe)	//-呵呵,又是一个入口,还是申请空间吧,只是这个空间赋予的的含义不同,通过结构体定义区分
 {
 	int rc = 0;
 	int nbufs = 8;
@@ -530,8 +530,8 @@ int MQTTPersistence_persistQueueEntry(Clients* aclient, MQTTPersistence_qEntry* 
 	return rc;
 }
 
-
-MQTTPersistence_qEntry* MQTTPersistence_restoreQueueEntry(char* buffer, size_t buflen)
+//-可能恢复队列之前需要先申请一个空间准备来保存待恢复的数据
+MQTTPersistence_qEntry* MQTTPersistence_restoreQueueEntry(char* buffer, size_t buflen)	//-恢复队列入口,使用了队列的概念,队列整体使用思路是什么
 {
 	MQTTPersistence_qEntry* qe = NULL;
 	char* ptr = buffer;
@@ -542,7 +542,7 @@ MQTTPersistence_qEntry* MQTTPersistence_restoreQueueEntry(char* buffer, size_t b
 	memset(qe, '\0', sizeof(MQTTPersistence_qEntry));
 	
 	qe->msg = malloc(sizeof(MQTTPersistence_message));
-	memset(qe->msg, '\0', sizeof(MQTTPersistence_message));
+	memset(qe->msg, '\0', sizeof(MQTTPersistence_message));	//-系统中都是申请内存的概念,没有那么直接的变量定义,都直接定义变量,程序空间太大了
 	
 	qe->msg->payloadlen = *(int*)ptr;
 	ptr += sizeof(int);
@@ -588,7 +588,7 @@ void MQTTPersistence_insertInSeqOrder(List* list, MQTTPersistence_qEntry* qEntry
 		if (qEntry->seqno < ((MQTTPersistence_qEntry*)current->content)->seqno)
 			index = current;
 	}
-	ListInsert(list, qEntry, size, index);
+	ListInsert(list, qEntry, size, index);	//-插入进 序列命令
 	FUNC_EXIT;
 }
 
@@ -598,7 +598,7 @@ void MQTTPersistence_insertInSeqOrder(List* list, MQTTPersistence_qEntry* qEntry
  * @param c the client as ::Clients - the client object to restore the messages to
  * @return return code, 0 if successful
  */
-int MQTTPersistence_restoreMessageQueue(Clients* c)
+int MQTTPersistence_restoreMessageQueue(Clients* c)	//-从持久到内存恢复一个消息队列
 {
 	int rc = 0;
 	char **msgkeys;
@@ -622,7 +622,7 @@ int MQTTPersistence_restoreMessageQueue(Clients* c)
 				
 				if (qe)
 				{	
-					qe->seqno = atoi(msgkeys[i]+2);
+					qe->seqno = atoi(msgkeys[i]+2);	//-(表示 ascii to integer)是把字符串转换成整型数的一个函数
 					MQTTPersistence_insertInSeqOrder(c->messageQueue, qe, sizeof(MQTTPersistence_qEntry));
 					free(buffer);
 					c->qentry_seqno = max(c->qentry_seqno, qe->seqno);

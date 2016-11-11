@@ -98,9 +98,9 @@ int pstopen(void **handle, const char* clientID, const char* serverURI, void* co
 	while ( (pToken != NULL) && (rc == 0) )
 	{
 		/* Append the next directory level and try to create it */
-		sprintf( pCrtDirName, "%s/%s", pCrtDirName, pToken );
+		sprintf( pCrtDirName, "%s/%s", pCrtDirName, pToken );	//-附加是什么意思
 		rc = pstmkdir( pCrtDirName );
-		pToken = strtok_r( NULL, "\\/", &save_ptr );
+		pToken = strtok_r( NULL, "\\/", &save_ptr );	//-其实就是根据分割符提取出不同的内容,前面的字符是/ 而\\是转义符号?
 	}
 
 	*handle = clientDir;

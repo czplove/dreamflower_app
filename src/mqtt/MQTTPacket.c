@@ -15,7 +15,7 @@
  *    Ian Craggs, Allan Stockdill-Mander - SSL updates
  *    Ian Craggs - MQTT 3.1.1 support
  *******************************************************************************/
-
+//-和MQTTPacketOut.c文件模式是一样的
 /**
  * @file
  * \brief functions to deal with reading and writing of MQTT packets from and to sockets
@@ -39,7 +39,24 @@
 #if !defined(min)
 #define min(A,B) ( (A) < (B) ? (A):(B))
 #endif
-
+/*
+0->保留；
+1->连接请求：客户端请求连接到服务器；
+2->连接确认；
+3->发布消息；
+4->发布确认；
+5->发布信息收到（确保分发的第1部分）；
+6->发布信息分发（确保分发的第2部分）；
+7->发布完成 （确保分发的第3部分）；
+8->客户端订阅请求；
+9->订阅确认；
+10->客户端取消订阅请求；
+11->取消订阅确认；
+12->ping请求；
+13->ping响应；
+14->客户端正在断开连接；
+15->保留；
+*/
 /**
  * List of the predefined MQTT v3 packet names.
  */
@@ -92,7 +109,7 @@ pf new_packets[] =
  * @param error pointer to the error code which is completed if no packet is returned
  * @return the packet structure or NULL if there was an error
  */
-void* MQTTPacket_Factory(networkHandles* net, int* error)
+void* MQTTPacket_Factory(networkHandles* net, int* error)	//-读一个来自套接字的MQTT帧
 {
 	char* data = NULL;
 	static Header header;
@@ -286,7 +303,7 @@ int MQTTPacket_encode(char* buf, int length)
  * @param value the decoded length returned
  * @return the number of bytes read from the socket
  */
-int MQTTPacket_decode(networkHandles* net, int* value)
+int MQTTPacket_decode(networkHandles* net, int* value)	//-解码
 {
 	int rc = SOCKET_ERROR;
 	char c;
@@ -427,7 +444,7 @@ void writeInt(char** pptr, int anInt)	//-把整数转化为字节保存
  * @param pptr pointer to the output buffer - incremented by the number of bytes used & returned
  * @param string the C string to write
  */
-void writeUTF(char** pptr, const char* string)
+void writeUTF(char** pptr, const char* string)	//-是进行字符编码转换吗
 {
 	int len = strlen(string);
 	writeInt(pptr, len);
@@ -443,7 +460,7 @@ void writeUTF(char** pptr, const char* string)
  * @param datalen the length of the rest of the packet
  * @return pointer to the packet structure
  */
-void* MQTTPacket_header_only(unsigned char aHeader, char* data, size_t datalen)
+void* MQTTPacket_header_only(unsigned char aHeader, char* data, size_t datalen)	//-此函数仅仅实现其中一个模块功能
 {
 	static unsigned char header = 0;
 	header = aHeader;
@@ -456,7 +473,7 @@ void* MQTTPacket_header_only(unsigned char aHeader, char* data, size_t datalen)
  * @param socket the open socket to send the data to
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_disconnect(networkHandles *net, const char* clientID)
+int MQTTPacket_send_disconnect(networkHandles *net, const char* clientID)	//-客户端正在端口连接
 {
 	Header header;
 	int rc = 0;
@@ -478,7 +495,7 @@ int MQTTPacket_send_disconnect(networkHandles *net, const char* clientID)
  * @param datalen the length of the rest of the packet
  * @return pointer to the packet structure
  */
-void* MQTTPacket_publish(unsigned char aHeader, char* data, size_t datalen)
+void* MQTTPacket_publish(unsigned char aHeader, char* data, size_t datalen)	//-发布
 {
 	Publish* pack = malloc(sizeof(Publish));
 	char* curdata = data;
@@ -526,7 +543,7 @@ void MQTTPacket_freePublish(Publish* pack)
  * @param net the network handle to send the data to
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_ack(int type, int msgid, int dup, networkHandles *net)
+int MQTTPacket_send_ack(int type, int msgid, int dup, networkHandles *net)	//-怎么感觉重复了
 {
 	Header header;
 	int rc;
@@ -554,7 +571,7 @@ int MQTTPacket_send_ack(int type, int msgid, int dup, networkHandles *net)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_puback(int msgid, networkHandles* net, const char* clientID)
+int MQTTPacket_send_puback(int msgid, networkHandles* net, const char* clientID)	//-发布确认
 {
 	int rc = 0;
 
@@ -587,7 +604,7 @@ void MQTTPacket_freeSuback(Suback* pack)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_pubrec(int msgid, networkHandles* net, const char* clientID)
+int MQTTPacket_send_pubrec(int msgid, networkHandles* net, const char* clientID)	//-发布信息收到（确保分发的第1部分）
 {
 	int rc = 0;
 
@@ -607,7 +624,7 @@ int MQTTPacket_send_pubrec(int msgid, networkHandles* net, const char* clientID)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_pubrel(int msgid, int dup, networkHandles* net, const char* clientID)
+int MQTTPacket_send_pubrel(int msgid, int dup, networkHandles* net, const char* clientID)	//-发布信息分发（确保分发的第2部分）
 {
 	int rc = 0;
 
@@ -626,7 +643,7 @@ int MQTTPacket_send_pubrel(int msgid, int dup, networkHandles* net, const char* 
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_pubcomp(int msgid, networkHandles* net, const char* clientID)
+int MQTTPacket_send_pubcomp(int msgid, networkHandles* net, const char* clientID)	//-发布完成（确保分发的第3部分）
 {
 	int rc = 0;
 
@@ -668,7 +685,7 @@ void* MQTTPacket_ack(unsigned char aHeader, char* data, size_t datalen)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_publish(Publish* pack, int dup, int qos, int retained, networkHandles* net, const char* clientID)
+int MQTTPacket_send_publish(Publish* pack, int dup, int qos, int retained, networkHandles* net, const char* clientID)	//-发送发布帧
 {
 	Header header;
 	char *topiclen;
@@ -722,7 +739,7 @@ int MQTTPacket_send_publish(Publish* pack, int dup, int qos, int retained, netwo
  * Free allocated storage for a various packet tyoes
  * @param pack pointer to the suback packet structure
  */
-void MQTTPacket_free_packet(MQTTPacket* pack)
+void MQTTPacket_free_packet(MQTTPacket* pack)	//-释放帧什么意思
 {
 	FUNC_ENTRY;
 	if (pack->header.bits.type == PUBLISH)

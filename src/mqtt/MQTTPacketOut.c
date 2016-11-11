@@ -16,7 +16,7 @@
  *    Ian Craggs - MQTT 3.1.1 support
  *    Rong Xiang, Ian Craggs - C++ compatibility
  *******************************************************************************/
-
+//-处理来自和到套接字的读写MQTT帧
 /**
  * @file
  * \brief functions to deal with reading and writing of MQTT packets from and to sockets
@@ -117,7 +117,7 @@ exit:
  * @param datalen the length of the rest of the packet
  * @return pointer to the packet structure
  */
-void* MQTTPacket_connack(unsigned char aHeader, char* data, size_t datalen)
+void* MQTTPacket_connack(unsigned char aHeader, char* data, size_t datalen)	//-连接确认
 {
 	Connack* pack = malloc(sizeof(Connack));
 	char* curdata = data;
@@ -137,7 +137,7 @@ void* MQTTPacket_connack(unsigned char aHeader, char* data, size_t datalen)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)
+int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)	//-ping请求
 {
 	Header header;
 	int rc = 0;
@@ -146,7 +146,7 @@ int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)
 	FUNC_ENTRY;
 	header.byte = 0;
 	header.bits.type = PINGREQ;
-	rc = MQTTPacket_send(net, header, NULL, buflen,0);
+	rc = MQTTPacket_send(net, header, NULL, buflen,0);	//-有足够的标识位就可以发送
 	Log(LOG_PROTOCOL, 20, NULL, net->socket, clientID, rc);
 	FUNC_EXIT_RC(rc);
 	return rc;
@@ -163,7 +163,7 @@ int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, networkHandles* net, const char* clientID)
+int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, networkHandles* net, const char* clientID)	//-发送一个MQTT订阅帧到一个套接字
 {
 	Header header;
 	char *data, *ptr;
@@ -172,7 +172,7 @@ int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, netw
 	int datalen;
 
 	FUNC_ENTRY;
-	header.bits.type = SUBSCRIBE;
+	header.bits.type = SUBSCRIBE;	//-客户端订阅请求
 	header.bits.dup = dup;
 	header.bits.qos = 1;
 	header.bits.retain = 0;
@@ -206,7 +206,7 @@ int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, netw
  * @param datalen the length of the rest of the packet
  * @return pointer to the packet structure
  */
-void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)
+void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)	//-订阅确认
 {
 	Suback* pack = malloc(sizeof(Suback));
 	char* curdata = data;
@@ -214,13 +214,13 @@ void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)
 	FUNC_ENTRY;
 	pack->header.byte = aHeader;
 	pack->msgId = readInt(&curdata);
-	pack->qoss = ListInitialize();
+	pack->qoss = ListInitialize();	//-为了应答产生了一个新的帧
 	while ((size_t)(curdata - data) < datalen)
 	{
 		int* newint;
 		newint = malloc(sizeof(int));
-		*newint = (int)readChar(&curdata);
-		ListAppend(pack->qoss, newint, sizeof(int));
+		*newint = (int)readChar(&curdata);	//?读一个字节什么意思
+		ListAppend(pack->qoss, newint, sizeof(int));	//?一个字节一个字节增加有什么意思啊
 	}
 	FUNC_EXIT;
 	return pack;
@@ -236,7 +236,7 @@ void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)
  * @param clientID the string client identifier, only used for tracing
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_unsubscribe(List* topics, int msgid, int dup, networkHandles* net, const char* clientID)
+int MQTTPacket_send_unsubscribe(List* topics, int msgid, int dup, networkHandles* net, const char* clientID)	//-发送一个MQTT取消订阅帧到一个套接字
 {
 	Header header;
 	char *data, *ptr;
@@ -245,7 +245,7 @@ int MQTTPacket_send_unsubscribe(List* topics, int msgid, int dup, networkHandles
 	int datalen;
 
 	FUNC_ENTRY;
-	header.bits.type = UNSUBSCRIBE;
+	header.bits.type = UNSUBSCRIBE;	//-客户端取消订阅请求
 	header.bits.dup = dup;
 	header.bits.qos = 1;
 	header.bits.retain = 0;
@@ -259,7 +259,7 @@ int MQTTPacket_send_unsubscribe(List* topics, int msgid, int dup, networkHandles
 	elem = NULL;
 	while (ListNextElement(topics, &elem))
 		writeUTF(&ptr, (char*)(elem->content));
-	rc = MQTTPacket_send(net, header, data, datalen, 1);
+	rc = MQTTPacket_send(net, header, data, datalen, 1);	//-组织好内容发送出去
 	Log(LOG_PROTOCOL, 25, NULL, net->socket, clientID, msgid, rc);
 	if (rc != TCPSOCKET_INTERRUPTED)
 		free(data);
