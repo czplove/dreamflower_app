@@ -46,7 +46,7 @@ defList(STRING)
 defList(TMP)
 
 BE*/
-
+//-这是定义了一个明显的链表元素,一个成员指向下一个节点
 /**
  * Structure to hold all data for one list element
  */

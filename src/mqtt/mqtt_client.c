@@ -26,12 +26,12 @@ mqtt_client * mqtt_new(char * host, int port, char *client_id)	//-这里将根据参数
 	mqtt_client * m;	//-这个应该是客户端的一个实体,记录了整个一个客户端的全部信息
 	int rc;
 
-	m = malloc(sizeof(mqtt_client));
-	if ( m != NULL) {
-		memset(m , 0, sizeof(mqtt_client));
+	m = malloc(sizeof(mqtt_client));	//-大量使用临时申请空间,这样是有好处的不固定占用内存空间
+	if ( m != NULL) {	//-首先创建了最初的MQTT客户端实体对象
+		memset(m , 0, sizeof(mqtt_client));	//-初始化对象变量
 		rc = MQTTClient_create(&(m->client), host, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL);
 		if ( rc == MQTTCLIENT_SUCCESS ) {
-			m->timeout = MQTT_DEFAULT_TIME_OUT;
+			m->timeout = MQTT_DEFAULT_TIME_OUT;	//-赋予了一个有效的初始值
 			m->received_msg = NULL;
 			//mqtt_set_callback_message_arrived(m, m->on_message_arrived);
 		} else {

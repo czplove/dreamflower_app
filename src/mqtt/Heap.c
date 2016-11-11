@@ -15,7 +15,7 @@
  *    Ian Craggs - use tree data structure instead of list
  *    Ian Craggs - change roundup to Heap_roundup to avoid macro name clash on MacOSX
  *******************************************************************************/
-
+//-¶Ñ
 /**
  * @file
  * \brief functions to manage the heap with the goal of eliminating memory leaks

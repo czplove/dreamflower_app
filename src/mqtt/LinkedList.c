@@ -14,7 +14,9 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *    Ian Craggs - updates for the async client
  *******************************************************************************/
-
+//-链表结构
+//-这些链表可以保存任何类型的数据,被这个ListElement结构指向的内容.
+//-listelement指向下一个和之前的项目列表中。
 /**
  * @file
  * \brief functions which apply to linked list structures.
@@ -32,12 +34,13 @@
 
 #include "Heap.h"
 
+//?如何在系统中构建了一个链表系统,然后列表系统又是如何工作的.
 
 /**
  * Sets a list structure to empty - all null values.  Does not remove any items from the list.
  * @param newl a pointer to the list structure to be initialized
  */
-void ListZero(List* newl)
+void ListZero(List* newl)	//-这里仅仅是把链表参数清为空了,对以前的成员并没有任何处理,当然可以就丢失了处理能力了
 {
 	memset(newl, '\0', sizeof(List));
 	/*newl->first = NULL;
@@ -51,7 +54,7 @@ void ListZero(List* newl)
  * Allocates and initializes a new list structure.
  * @return a pointer to the new list structure
  */
-List* ListInitialize(void)
+List* ListInitialize(void)	//-创建了一个链表,链表的操作将在程序中实现
 {
 	List* newl = malloc(sizeof(List));
 	ListZero(newl);
@@ -67,11 +70,11 @@ List* ListInitialize(void)
  * @param newel the ListElement to be used in adding the new item
  * @param size the size of the element
  */
-void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size)
+void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size)	//-增加一个已经存在的元素到链表中
 { /* for heap use */
-	newel->content = content;
+	newel->content = content;	//-void指针只知道,指向变量/对象的起始地址,并不知道后面的长度,所以不能引用,仅仅记录了地址
 	newel->next = NULL;
-	newel->prev = aList->last;
+	newel->prev = aList->last;	//-指向前面一个链表
 	if (aList->first == NULL)
 		aList->first = newel;
 	else

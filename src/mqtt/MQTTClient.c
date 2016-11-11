@@ -27,7 +27,7 @@
  *    Ian Craggs - fix for bug 443724 - stack corruption
  *    Ian Craggs - fix for bug 447672 - simultaneous access to socket structure
  *******************************************************************************/
-
+//-同步API执行
 /**
  * @file
  * \brief Synchronous API implementation
@@ -112,7 +112,7 @@ static mutex_type mqttclient_mutex = &mqttclient_mutex_store;
 static pthread_mutex_t socket_mutex_store = PTHREAD_MUTEX_INITIALIZER;
 static mutex_type socket_mutex = &socket_mutex_store;
 
-void MQTTClient_init()
+void MQTTClient_init()	//-客户端初始化
 {
 	pthread_mutexattr_t attr;
 	int rc;
@@ -236,12 +236,12 @@ long MQTTClient_elapsed(struct timeval start)	//-得到一个时间段,单位是毫秒
 }
 #endif
 
-
+//-根据信息创建一个客户实体,并用结构体记录身份
 int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* clientId,
 		int persistence_type, void* persistence_context)
 {
 	int rc = 0;
-	MQTTClients *m = NULL;
+	MQTTClients *m = NULL;	//-这个只是客户端实体中的一个元素
 
 	FUNC_ENTRY;
 	rc = Thread_lock_mutex(mqttclient_mutex);	//-这里整个MQTT协议库是针对很多平台的,所以简单问题复杂了,但是这些方法都是值得学习的.
@@ -258,10 +258,10 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 		goto exit;
 	}
 
-	if (!initialized)
+	if (!initialized)	//-可能是一个程序可以创建几个客户端,但是有部分东西只可以使用一次
 	{
 		#if defined(HEAP_H)
-			Heap_initialize();
+			Heap_initialize();	//-stack的空间由操作系统自动分配和释放，heap的空间是手动申请和释放的，heap常用new关键字来分配。
 		#endif
 		Log_initialize((Log_nameValue*)MQTTClient_getVersionInfo());	//?建立自己的打印语句
 		bstate->clients = ListInitialize();	//?像初始化了一个链表
@@ -318,7 +318,7 @@ exit:
 }
 
 
-void MQTTClient_terminate(void)
+void MQTTClient_terminate(void)	//-客户端终止的开始
 {
 	FUNC_ENTRY;
 	MQTTClient_stop();
@@ -341,7 +341,7 @@ void MQTTClient_terminate(void)
 }
 
 
-void MQTTClient_emptyMessageQueue(Clients* client)
+void MQTTClient_emptyMessageQueue(Clients* client)	//-清空消息队列
 {
 	FUNC_ENTRY;
 	/* empty message queue */
@@ -404,7 +404,7 @@ exit:
 }
 
 
-void MQTTClient_freeMessage(MQTTClient_message** message)
+void MQTTClient_freeMessage(MQTTClient_message** message)	//-释放消息
 {
 	FUNC_ENTRY;
 	free((*message)->payload);
@@ -414,7 +414,7 @@ void MQTTClient_freeMessage(MQTTClient_message** message)
 }
 
 
-void MQTTClient_free(void* memory)
+void MQTTClient_free(void* memory)	//-释放什么
 {
 	FUNC_ENTRY;
 	free(memory);
@@ -422,7 +422,7 @@ void MQTTClient_free(void* memory)
 }
 
 
-int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* topicLen, MQTTClient_message** message)
+int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* topicLen, MQTTClient_message** message)	//-发出消息
 {
 	qEntry* qe = (qEntry*)(m->c->messageQueue->first->content);
 
@@ -448,7 +448,7 @@ int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* top
  * @param b second integer value
  * @return boolean indicating whether a and b are equal
  */
-int clientSockCompare(void* a, void* b)
+int clientSockCompare(void* a, void* b)	//?比较回调函数是否相同
 {
 	MQTTClients* m = (MQTTClients*)a;
 	return m->c->net.socket == *(int*)b;
@@ -461,7 +461,7 @@ int clientSockCompare(void* a, void* b)
  * @param context a pointer to the relevant client
  * @return thread_return_type standard thread return value - not used here
  */
-thread_return_type WINAPI connectionLost_call(void* context)
+thread_return_type WINAPI connectionLost_call(void* context)	//?包装函数 指定线程 连接丢失
 {
 	MQTTClients* m = (MQTTClients*)context;
 
@@ -471,7 +471,7 @@ thread_return_type WINAPI connectionLost_call(void* context)
 
 
 /* This is the thread function that handles the calling of callback functions if set */
-thread_return_type WINAPI MQTTClient_run(void* n)
+thread_return_type WINAPI MQTTClient_run(void* n)	//-*使用一个专门的线程维护一个客户端的运行
 {
 	long timeout = 10L; /* first time in we have a small timeout.  Gets things started more quickly */
 
@@ -608,7 +608,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)
 }
 
 
-void MQTTClient_stop()
+void MQTTClient_stop()	//-停止客户端
 {
 	int rc = 0;
 
@@ -650,7 +650,7 @@ void MQTTClient_stop()
 	FUNC_EXIT_RC(rc);
 }
 
-
+//-设置回调,
 int MQTTClient_setCallbacks(MQTTClient handle, void* context, MQTTClient_connectionLost* cl,
 														MQTTClient_messageArrived* ma, MQTTClient_deliveryComplete* dc)
 {
@@ -676,7 +676,7 @@ int MQTTClient_setCallbacks(MQTTClient handle, void* context, MQTTClient_connect
 }
 
 
-void MQTTClient_closeSession(Clients* client)
+void MQTTClient_closeSession(Clients* client)	//-关闭会话
 {
 	FUNC_ENTRY;
 	client->good = 0;
@@ -705,7 +705,7 @@ void MQTTClient_closeSession(Clients* client)
 }
 
 
-int MQTTClient_cleanSession(Clients* client)
+int MQTTClient_cleanSession(Clients* client)	//-清除会话
 {
 	int rc = 0;
 
@@ -722,7 +722,7 @@ int MQTTClient_cleanSession(Clients* client)
 }
 
 
-void Protocol_processPublication(Publish* publish, Clients* client)
+void Protocol_processPublication(Publish* publish, Clients* client)	//-处理发布
 {
 	qEntry* qe = NULL;
 	MQTTClient_message* mm = NULL;
@@ -1034,7 +1034,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 }
 
 
-int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)
+int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)	//-连接请求：客户端请求连接到服务器；
 {
 	MQTTClients* m = handle;
 	int rc = SOCKET_ERROR;	//-这里赋给的初值也是有讲究的,是一个编程思路
@@ -1178,13 +1178,13 @@ exit:
 }
 
 
-int MQTTClient_disconnect_internal(MQTTClient handle, int timeout)
+int MQTTClient_disconnect_internal(MQTTClient handle, int timeout)	//-断开连接 内部
 {
 	return MQTTClient_disconnect1(handle, timeout, 1, 1);
 }
 
 
-void MQTTProtocol_closeSession(Clients* c, int sendwill)
+void MQTTProtocol_closeSession(Clients* c, int sendwill)	//-关闭会话
 {
 	MQTTClient_disconnect_internal((MQTTClient)c->context, 0);
 }
@@ -1196,7 +1196,7 @@ int MQTTClient_disconnect(MQTTClient handle, int timeout)	//-断开和服务器的连接
 }
 
 
-int MQTTClient_isConnected(MQTTClient handle)
+int MQTTClient_isConnected(MQTTClient handle)	//-连接请求：客户端请求连接到服务器；
 {
 	MQTTClients* m = handle;
 	int rc = 0;
@@ -1211,7 +1211,7 @@ int MQTTClient_isConnected(MQTTClient handle)
 }
 
 
-int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, int* qos)
+int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, int* qos)	//-一次性订阅几个主题
 {
 	MQTTClients* m = handle;
 	List* topics = ListInitialize();
@@ -1303,7 +1303,7 @@ exit:
 }
 
 
-int MQTTClient_subscribe(MQTTClient handle, const char* topic, int qos)
+int MQTTClient_subscribe(MQTTClient handle, const char* topic, int qos)	//-订阅
 {
 	int rc = 0;
 	char *const topics[] = {(char*)topic};
@@ -1317,7 +1317,7 @@ int MQTTClient_subscribe(MQTTClient handle, const char* topic, int qos)
 }
 
 
-int MQTTClient_unsubscribeMany(MQTTClient handle, int count, char* const* topic)
+int MQTTClient_unsubscribeMany(MQTTClient handle, int count, char* const* topic)	//-一次性取消几个订阅
 {
 	MQTTClients* m = handle;
 	List* topics = ListInitialize();
@@ -1387,7 +1387,7 @@ exit:
 }
 
 
-int MQTTClient_unsubscribe(MQTTClient handle, const char* topic)
+int MQTTClient_unsubscribe(MQTTClient handle, const char* topic)	//-主动取消订阅
 {
 	int rc = 0;
 	char *const topics[] = {(char*)topic};
@@ -1397,7 +1397,7 @@ int MQTTClient_unsubscribe(MQTTClient handle, const char* topic)
 	return rc;
 }
 
-
+//-发布
 int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen, void* payload,
 							 int qos, int retained, MQTTClient_deliveryToken* deliveryToken)
 {
@@ -1492,7 +1492,7 @@ exit:
 }
 
 
-
+//-发布信息
 int MQTTClient_publishMessage(MQTTClient handle, const char* topicName, MQTTClient_message* message,
 															 MQTTClient_deliveryToken* deliveryToken)
 {
@@ -1519,7 +1519,7 @@ exit:
 }
 
 
-void MQTTClient_retry(void)
+void MQTTClient_retry(void)	//-再次尝试
 {
 	time_t now;
 
@@ -1537,7 +1537,7 @@ void MQTTClient_retry(void)
 }
 
 
-MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)
+MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-周期处理
 {
 	struct timeval tp = {0L, 0L};
 	static Ack ack;
@@ -1618,7 +1618,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)
 }
 
 
-MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long timeout)
+MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long timeout)	//-客户端等待什么
 {
 	MQTTPacket* pack = NULL;
 	MQTTClients* m = handle;
@@ -1712,7 +1712,7 @@ exit:
 	return pack;
 }
 
-
+//-客户端接收
 int MQTTClient_receive(MQTTClient handle, char** topicName, int* topicLen, MQTTClient_message** message,
 											 unsigned long timeout)
 {
@@ -1768,7 +1768,7 @@ exit:
 }
 
 
-void MQTTClient_yield(void)
+void MQTTClient_yield(void)	//-客户端放弃
 {
 	START_TIME_TYPE start = MQTTClient_start_clock();
 	unsigned long elapsed = 0L;
@@ -1808,7 +1808,7 @@ int pubCompare(void* a, void* b)
 }
 
 
-int MQTTClient_waitForCompletion(MQTTClient handle, MQTTClient_deliveryToken mdt, unsigned long timeout)
+int MQTTClient_waitForCompletion(MQTTClient handle, MQTTClient_deliveryToken mdt, unsigned long timeout)	//-等待完成
 {
 	int rc = MQTTCLIENT_FAILURE;
 	START_TIME_TYPE start = MQTTClient_start_clock();
@@ -1856,7 +1856,7 @@ exit:
 }
 
 
-int MQTTClient_getPendingDeliveryTokens(MQTTClient handle, MQTTClient_deliveryToken **tokens)
+int MQTTClient_getPendingDeliveryTokens(MQTTClient handle, MQTTClient_deliveryToken **tokens)	//-得到挂起的传递符号
 {
 	int rc = MQTTCLIENT_SUCCESS;
 	MQTTClients* m = handle;
@@ -1892,7 +1892,7 @@ exit:
 	return rc;
 }
 
-MQTTClient_nameValue* MQTTClient_getVersionInfo()
+MQTTClient_nameValue* MQTTClient_getVersionInfo()	//-获得版本号
 {
 	#define MAX_INFO_STRINGS 8
 	static MQTTClient_nameValue libinfo[MAX_INFO_STRINGS + 1];	//-这里作为静态变量,以后是可以使用的?
@@ -1933,7 +1933,7 @@ MQTTClient_nameValue* MQTTClient_getVersionInfo()
  * Cleaning up means removing any publication data that was stored because the write did
  * not originally complete.
  */
-void MQTTProtocol_checkPendingWrites()
+void MQTTProtocol_checkPendingWrites()	//-检查挂起的写是否被完成,如果完成了就清除
 {
 	FUNC_ENTRY;
 	if (state.pending_writes.count > 0)
