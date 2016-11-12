@@ -14,7 +14,7 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *    Ian Craggs - updates for the async client
  *******************************************************************************/
-//-Á´±í½á¹¹
+//-Á´±í½á¹¹---Ë«ÏòÁ´±í
 //-ÕâĞ©Á´±í¿ÉÒÔ±£´æÈÎºÎÀàĞÍµÄÊı¾İ,±»Õâ¸öListElement½á¹¹Ö¸ÏòµÄÄÚÈİ.
 //-listelementÖ¸ÏòÏÂÒ»¸öºÍÖ®Ç°µÄÏîÄ¿ÁĞ±íÖĞ¡£
 /**
@@ -75,13 +75,13 @@ void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size
 	newel->content = content;	//-voidÖ¸ÕëÖ»ÖªµÀ,Ö¸Ïò±äÁ¿/¶ÔÏóµÄÆğÊ¼µØÖ·,²¢²»ÖªµÀºóÃæµÄ³¤¶È,ËùÒÔ²»ÄÜÒıÓÃ,½ö½ö¼ÇÂ¼ÁËµØÖ·
 	newel->next = NULL;
 	newel->prev = aList->last;	//-Ö¸ÏòÇ°ÃæÒ»¸öÁ´±í
-	if (aList->first == NULL)
+	if (aList->first == NULL)	//-ĞÂÁ´±í½ÚµãÓÅÏÈ²åÔÚÉÏ¸öÁ´±íµÄÇ°Ãæ
 		aList->first = newel;
 	else
 		aList->last->next = newel;
 	aList->last = newel;
-	++(aList->count);
-	aList->size += size;
+	++(aList->count);	//-¼ÇÂ¼ÁËÁ´±íÖĞÒ»¹²¼¸¸öÔªËØ
+	aList->size += size;	//-Õâ¸ö³ß´çÒ²ĞíÊÇÁ´±íÖĞËùÓĞ²ÎÊıµÄ´óĞ¡ºÍ
 }
 
 
@@ -93,7 +93,7 @@ void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size
  */
 void ListAppend(List* aList, void* content, int size)	//-ÔÚÒ»¸öÁĞ±íÖĞÔö¼ÓÒ»¸öÏîÄ¿
 {
-	ListElement* newel = malloc(sizeof(ListElement));
+	ListElement* newel = malloc(sizeof(ListElement));	//-ÉêÇëÒ»¸öÁ´±íÔªËØ
 	ListAppendNoMalloc(aList, content, newel, size);
 }
 
@@ -106,7 +106,7 @@ void ListAppend(List* aList, void* content, int size)	//-ÔÚÒ»¸öÁĞ±íÖĞÔö¼ÓÒ»¸öÏîÄ
  * @param index the position in the list. If NULL, this function is equivalent
  * to ListAppend.
  */
-void ListInsert(List* aList, void* content, int size, ListElement* index)
+void ListInsert(List* aList, void* content, int size, ListElement* index)	//-ÔÚÖ¸¶¨µÄÎ»ÖÃÉÏ²åÈëÒ»¸öÁĞ±íÔªËØ
 {
 	ListElement* newel = malloc(sizeof(ListElement));
 
@@ -136,7 +136,7 @@ void ListInsert(List* aList, void* content, int size, ListElement* index)
  * @param content pointer to the list item content itself
  * @return the list item found, or NULL
  */
-ListElement* ListFind(List* aList, void* content)
+ListElement* ListFind(List* aList, void* content)	//-Í¨¹ıÔªËØÖĞµÄÄ¿Â¼Ö¸Õë
 {
 	return ListFindItem(aList, content, NULL);
 }
@@ -197,7 +197,7 @@ ListElement* ListFindItem(List* aList, void* content, int(*callback)(void*, void
  * @param freeContent boolean value to indicate whether the item found is to be freed
  * @return 1=item removed, 0=item not removed
  */
-int ListUnlink(List* aList, void* content, int(*callback)(void*, void*), int freeContent)
+int ListUnlink(List* aList, void* content, int(*callback)(void*, void*), int freeContent)	//-´ÓÁ´±íÖĞÒÆ³ıÒ»¸öÔªËØ²¢ÊÍ·Å¿Õ¼ä
 {
 	ListElement* next = NULL;
 	ListElement* saved = aList->current;
@@ -261,7 +261,7 @@ int ListRemove(List* aList, void* content)
  * @param aList the list from which the item is to be removed
  * @return 1=item removed, 0=item not removed
  */
-void* ListDetachHead(List* aList)
+void* ListDetachHead(List* aList)	//-ÒÆ³ı²¢ÇÒÊÍ·ÅÁĞ±íÖĞµÄµÚÒ»¸öÔªËØ
 {
 	void *content = NULL;
 	if (aList->count > 0)
@@ -299,7 +299,7 @@ int ListRemoveHead(List* aList)
  * @param aList the list from which the item is to be removed
  * @return the last item removed (or NULL if none was)
  */
-void* ListPopTail(List* aList)
+void* ListPopTail(List* aList)	//-ÒÆ³ıµ«ÊÇ²»ÊÍ·ÅÁĞ±íÖĞµÄ×îºóÒ»¸öÔªËØ
 {
 	void* content = NULL;
 	if (aList->count > 0)
@@ -352,7 +352,7 @@ int ListRemoveItem(List* aList, void* content, int(*callback)(void*, void*))
  * Removes and frees all items in a list, leaving the list ready for new items.
  * @param aList the list to which the operation is to be applied
  */
-void ListEmpty(List* aList)
+void ListEmpty(List* aList)	//-Çå¿ÕÒ»¸öÁĞ±í,×¼±¸ÎªÁËĞÂµÄÓÃÍ¾
 {
 	while (aList->first != NULL)
 	{
@@ -381,7 +381,7 @@ void ListFree(List* aList)
  * Removes and but does not free all items in a list, and frees the list itself
  * @param aList the list to which the operation is to be applied
  */
-void ListFreeNoContent(List* aList)
+void ListFreeNoContent(List* aList)	//?ÒÆ³ıµ«ÊÇ²»ÊÍ·ÅËùÓĞµÄÁĞ±íÔªËØ,¶ø½ö½öÊÇÊÍ·ÅÁËÁĞ±í×Ô¼º
 {
 	while (aList->first != NULL)
 	{
@@ -400,7 +400,7 @@ void ListFreeNoContent(List* aList)
  * This is updated on return to the same value as that returned from this function
  * @return pointer to the current list element
  */
-ListElement* ListNextElement(List* aList, ListElement** pos)
+ListElement* ListNextElement(List* aList, ListElement** pos)	//-Ñ°ÕÒÁĞ±íµÄÒ»¸öÔªËØ
 {
 	return *pos = (*pos == NULL) ? aList->first : (*pos)->next;
 }
@@ -413,7 +413,7 @@ ListElement* ListNextElement(List* aList, ListElement** pos)
  * This is updated on return to the same value as that returned from this function
  * @return pointer to the current list element
  */
-ListElement* ListPrevElement(List* aList, ListElement** pos)
+ListElement* ListPrevElement(List* aList, ListElement** pos)	//-Á´±íµÄÇ°ÃæÒ»¸öÔªËØ
 {
 	return *pos = (*pos == NULL) ? aList->last : (*pos)->prev;
 }
@@ -425,7 +425,7 @@ ListElement* ListPrevElement(List* aList, ListElement** pos)
  * @param b second integer value
  * @return boolean indicating whether a and b are equal
  */
-int intcompare(void* a, void* b)
+int intcompare(void* a, void* b)	//-±È½ÏÕûÊı,Ê¹ÓÃÁËvoidÖ¸Õë
 {
 	return *((int*)a) == *((int*)b);
 }

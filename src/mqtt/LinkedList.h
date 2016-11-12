@@ -55,7 +55,7 @@ typedef struct ListElementStruct
 	struct ListElementStruct *prev, /**< pointer to previous list element */
 							*next;	/**< pointer to next list element */
 	void* content;					/**< pointer to element content */
-} ListElement;
+} ListElement;	//-记录的是一个双向链表的单元
 
 
 /**
@@ -68,7 +68,7 @@ typedef struct
 				*current;	/**< current element in the list, for iteration */
 	int count,  /**< no of items */
 	    size;  /**< heap storage used */
-} List;
+} List;	//-定义的是整个链表的全貌
 
 void ListZero(List*);
 List* ListInitialize(void);
