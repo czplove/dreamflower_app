@@ -83,7 +83,7 @@ typedef struct
 		size;  /**< heap storage used */
 	unsigned int heap_tracking : 1; /**< switch on heap tracking for this tree? */
 	unsigned int allow_duplicates : 1; /**< switch to allow duplicate entries */
-} Tree;
+} Tree;	//-这里使用了 位域 概念
 
 
 Tree* TreeInitialize(int(*compare)(void*, void*, int));

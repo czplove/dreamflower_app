@@ -108,7 +108,7 @@ int Socket_error(char* aString, int sock)	//-获得相应错误套接字的错误类型
 /**
  * Initialize the socket module
  */
-void Socket_outInitialize()
+void Socket_outInitialize()	//-初始化套接字模块
 {
 #if defined(WIN32) || defined(WIN64)
 	WORD    winsockVer = 0x0202;
@@ -118,16 +118,19 @@ void Socket_outInitialize()
 	WSAStartup(winsockVer, &wsd);
 #else
 	FUNC_ENTRY;
-	signal(SIGPIPE, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);	//-这是一个简单的语句,但是对于我来说包含很多学习的知识点在
 #endif
-
+	//-在linux下写socket的程序的时候，如果尝试send到一个disconnected socket上，就会让底层抛出一个SIGPIPE信号。
+	//-这个信号的缺省处理方法是退出进程，大多数时候这都不是我们期望的。因此我们需要重载这个信号的处理方法。
+	//-上面语句就实现了这样的功能,
+	//-SIG_IGN(忽略信号),该信号的交付对线程没有影响  　
 	SocketBuffer_initialize();	//-创建了好多新东西
-	s.clientsds = ListInitialize();
+	s.clientsds = ListInitialize();	//-链表是存储数据的一种形式,这里大量使用了
 	s.connect_pending = ListInitialize();
 	s.write_pending = ListInitialize();
 	s.cur_clientsds = NULL;
 	FD_ZERO(&(s.rset));														/* Initialize the descriptor set */
-	FD_ZERO(&(s.pending_wset));
+	FD_ZERO(&(s.pending_wset));	//-将指定的文件描述符集清空，在对文件描述符集合进行设置前，必须对其进行初始化，如果不清空，由于在系统分配内存空间后，通常并不作清空处理，所以结果是不可知的。
 	s.maxfdp1 = 0;
 	memcpy((void*)&(s.rset_saved), (void*)&(s.rset), sizeof(s.rset_saved));
 	FUNC_EXIT;

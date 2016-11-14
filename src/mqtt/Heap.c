@@ -15,7 +15,7 @@
  *    Ian Craggs - use tree data structure instead of list
  *    Ian Craggs - change roundup to Heap_roundup to avoid macro name clash on MacOSX
  *******************************************************************************/
-//-堆
+//-堆:一般由程序员分配释放
 /**
  * @file
  * \brief functions to manage the heap with the goal of eliminating memory leaks
@@ -25,7 +25,7 @@
  * way as normal, so no recoding is necessary.
  *
  * */
-
+//-堆，队列优先,先进先出（FIFO—first in first out)。栈，先进后出(FILO—First-In/Last-Out)。
 #include "Tree.h"
 #include "Log.h"
 #include "StackTrace.h"
@@ -355,8 +355,8 @@ void HeapScan(int log_level)
  */
 int Heap_initialize()	//-仅仅进行堆栈初始化,这个是自己建立的软件堆栈?
 {
-	TreeInitializeNoMalloc(&heap, ptrCompare);
-	heap.heap_tracking = 0; /* no recursive heap tracking! */
+	TreeInitializeNoMalloc(&heap, ptrCompare);	//-建立了一个堆的起点,在程序中以全局变量形式存在的
+	heap.heap_tracking = 0; /* no recursive heap tracking! */	//-没有递归堆跟踪
 	return 0;
 }
 
@@ -366,10 +366,10 @@ int Heap_initialize()	//-仅仅进行堆栈初始化,这个是自己建立的软件堆栈?
  */
 void Heap_terminate()
 {
-	Log(TRACE_MIN, -1, "Maximum heap use was %d bytes", state.max_size);
+	Log(TRACE_MIN, -1, "Maximum heap use was %d bytes", state.max_size);	//-堆的最大字节数据
 	if (state.current_size > 20) /* One log list is freed after this function is called */
 	{
-		Log(LOG_ERROR, -1, "Some memory not freed at shutdown, possible memory leak");
+		Log(LOG_ERROR, -1, "Some memory not freed at shutdown, possible memory leak");	//-在关机的时候一些内存没有被释放,可能内存泄露了
 		HeapScan(LOG_ERROR);
 	}
 }

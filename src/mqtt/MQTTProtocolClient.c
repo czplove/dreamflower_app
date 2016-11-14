@@ -735,7 +735,7 @@ char* MQTTStrncpy(char *dest, const char *src, size_t dest_size)	//-没有什么特殊
 
   FUNC_ENTRY; 
   if (dest_size < strlen(src))
-    Log(TRACE_MIN, -1, "the src string is truncated");
+    Log(TRACE_MIN, -1, "the src string is truncated");	//-字符串被截断
 
   /* We must copy only the first (dest_size - 1) bytes */
   while (count > 1 && (*temp++ = *src++))
@@ -757,6 +757,6 @@ char* MQTTStrdup(const char* src)	//-复制字符串,分配在堆的空间上
 {
 	size_t mlen = strlen(src) + 1;
 	char* temp = malloc(mlen);
-	MQTTStrncpy(temp, src, mlen);
+	MQTTStrncpy(temp, src, mlen);	//-里面仅仅进行了字符的复制
 	return temp;
 }

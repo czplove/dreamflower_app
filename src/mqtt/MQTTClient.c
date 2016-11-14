@@ -263,9 +263,9 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 		#if defined(HEAP_H)
 			Heap_initialize();	//-stack的空间由操作系统自动分配和释放，heap的空间是手动申请和释放的，heap常用new关键字来分配。
 		#endif
-		Log_initialize((Log_nameValue*)MQTTClient_getVersionInfo());	//?建立自己的打印语句
-		bstate->clients = ListInitialize();	//?像初始化了一个链表
-		Socket_outInitialize();	//?进行了一系列的初始化,但是很多东西不了解
+		Log_initialize((Log_nameValue*)MQTTClient_getVersionInfo());	//-建立自己的打印语句,并安格式输出信息
+		bstate->clients = ListInitialize();	//-创建并初始化了一个链表,这里是起点
+		Socket_outInitialize();	//-进行了一系列的初始化,重点还是存储空间的
 		Socket_setWriteCompleteCallback(MQTTClient_writeComplete);	//-对回调函数赋值,这个减少了程序的耦合性
 		handles = ListInitialize();
 #if defined(OPENSSL)
@@ -276,8 +276,8 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 	m = malloc(sizeof(MQTTClients));
 	*handle = m;	//-刚刚创建了一个客户端结构对象,用于保存数据
 	memset(m, '\0', sizeof(MQTTClients));
-	if (strncmp(URI_TCP, serverURI, strlen(URI_TCP)) == 0)
-		serverURI += strlen(URI_TCP);
+	if (strncmp(URI_TCP, serverURI, strlen(URI_TCP)) == 0)	//-若str1与str2的前n个字符相同，则返回0
+		serverURI += strlen(URI_TCP);	//-去除特定的前几个字符
 #if defined(OPENSSL)
 	else if (strncmp(URI_SSL, serverURI, strlen(URI_SSL)) == 0)
 	{
@@ -286,22 +286,22 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 	}
 #endif
 	m->serverURI = MQTTStrdup(serverURI);	//-通过参数创建一个客户端,但是程序里面需要使用一定的方法来操作,比如这里就记录了有效的一个参数
-	ListAppend(handles, m, sizeof(MQTTClients));	//-在链表中增加一个元素
-
+	ListAppend(handles, m, sizeof(MQTTClients));	//-在链表中增加一个元素,链表存储的东西很简单,就是一个指针而已
+	//-上面在链表中增加了一个元素,仅仅是一个指针,而实际内容是由指针指向的存储单元决定的,下面就实际赋值了
 	m->c = malloc(sizeof(Clients));
 	memset(m->c, '\0', sizeof(Clients));
 	m->c->context = m;
-	m->c->outboundMsgs = ListInitialize();
-	m->c->inboundMsgs = ListInitialize();
+	m->c->outboundMsgs = ListInitialize();	//-靠 结构体里面套结构体好简单啊
+	m->c->inboundMsgs = ListInitialize();	//-
 	m->c->messageQueue = ListInitialize();
 	m->c->clientID = MQTTStrdup(clientId);
-	m->connect_sem = Thread_create_sem();
+	m->connect_sem = Thread_create_sem();	//-弄了这么多的信号量,控制流程的?
 	m->connack_sem = Thread_create_sem();
 	m->suback_sem = Thread_create_sem();
 	m->unsuback_sem = Thread_create_sem();
 
 #if !defined(NO_PERSISTENCE)
-	rc = MQTTPersistence_create(&(m->c->persistence), persistence_type, persistence_context);
+	rc = MQTTPersistence_create(&(m->c->persistence), persistence_type, persistence_context);	//-目前系统中没有使用持久空间,那就先不考虑,先来一层一层拨
 	if (rc == 0)
 	{
 		rc = MQTTPersistence_initialize(m->c, m->serverURI);
@@ -1922,7 +1922,7 @@ MQTTClient_nameValue* MQTTClient_getVersionInfo()	//-获得版本号
 	libinfo[i].name = "OpenSSL directory";
 	libinfo[i++].value = SSLeay_version(SSLEAY_DIR);
 #endif
-	libinfo[i].name = NULL;
+	libinfo[i].name = NULL;	//-结束标志
 	libinfo[i].value = NULL;
 	return libinfo;
 }

@@ -107,7 +107,7 @@ int MQTTPersistence_initialize(Clients *c, const char *serverURI)	//-´ò¿ª³Ö¾Ã´æ´
 	int rc = 0;
 
 	FUNC_ENTRY;
-	if ( c->persistence != NULL )
+	if ( c->persistence != NULL )	//-Èç¹ûÃ»ÓÐÊ¹ÓÃ³Ö¾Ã´æ´¢µÄ»°,¾ÍÃ»ÓÐÏÂÃæ²Ù×÷
 	{
 		rc = c->persistence->popen(&(c->phandle), c->clientID, serverURI, c->persistence->context);
 		if ( rc == 0 )

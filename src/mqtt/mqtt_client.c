@@ -29,7 +29,7 @@ mqtt_client * mqtt_new(char * host, int port, char *client_id)	//-这里将根据参数
 	m = malloc(sizeof(mqtt_client));	//-大量使用临时申请空间,这样是有好处的不固定占用内存空间
 	if ( m != NULL) {	//-首先创建了最初的MQTT客户端实体对象
 		memset(m , 0, sizeof(mqtt_client));	//-初始化对象变量
-		rc = MQTTClient_create(&(m->client), host, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+		rc = MQTTClient_create(&(m->client), host, client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL);	//-这里创建客户端,并没有套接字的操作,仅仅是内部描述信息等
 		if ( rc == MQTTCLIENT_SUCCESS ) {
 			m->timeout = MQTT_DEFAULT_TIME_OUT;	//-赋予了一个有效的初始值
 			m->received_msg = NULL;
