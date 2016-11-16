@@ -125,7 +125,7 @@ void* MQTTPacket_Factory(networkHandles* net, int* error)	//-读一个来自套接字的M
 #if defined(OPENSSL)
 	*error = (net->ssl) ? SSLSocket_getch(net->ssl, net->socket, &header.byte) : Socket_getch(net->socket, &header.byte); 
 #else
-	*error = Socket_getch(net->socket, &header.byte);
+	*error = Socket_getch(net->socket, &header.byte);	//-里面有最底层的接收库函数
 #endif
 	if (*error != TCPSOCKET_COMPLETE)   /* first byte is the header byte */
 		goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
@@ -139,7 +139,7 @@ void* MQTTPacket_Factory(networkHandles* net, int* error)	//-读一个来自套接字的M
 	data = (net->ssl) ? SSLSocket_getdata(net->ssl, net->socket, remaining_length, &actual_len) : 
 						Socket_getdata(net->socket, remaining_length, &actual_len);
 #else
-	data = Socket_getdata(net->socket, remaining_length, &actual_len);
+	data = Socket_getdata(net->socket, remaining_length, &actual_len);	//-里面有最底层的接收库函数
 #endif
 	if (data == NULL)
 	{
@@ -197,9 +197,9 @@ int MQTTPacket_send(networkHandles* net, Header header, char* buffer, size_t buf
 	FUNC_ENTRY;
 	buf = malloc(10);
 	buf[0] = header.byte;
-	buf0len = 1 + MQTTPacket_encode(&buf[1], buflen);
+	buf0len = 1 + MQTTPacket_encode(&buf[1], buflen);	//-缓冲区待发送的数据长度,进行格式转化
 #if !defined(NO_PERSISTENCE)
-	if (header.bits.type == PUBREL)
+	if (header.bits.type == PUBREL)	//-判断是否是发布消息分发
 	{
 		char* ptraux = buffer;
 		int msgId = readInt(&ptraux);
@@ -278,7 +278,7 @@ int MQTTPacket_sends(networkHandles* net, Header header, int count, char** buffe
  * @param length the length to be encoded
  * @return the number of bytes written to buffer
  */
-int MQTTPacket_encode(char* buf, int length)
+int MQTTPacket_encode(char* buf, int length)	//-每个字节的7位用于编码Remaining Length数据，第8位表示在下面还有值。
 {
 	int rc = 0;
 
@@ -341,7 +341,7 @@ exit:
  * @param pptr pointer to the input buffer - incremented by the number of bytes used & returned
  * @return the integer value calculated
  */
-int readInt(char** pptr)
+int readInt(char** pptr)	//-计算一个整数,把两个内存单元的数转化为一个整数
 {
 	char* ptr = *pptr;
 	int len = 256*((unsigned char)(*ptr)) + (unsigned char)(*(ptr+1));

@@ -152,14 +152,14 @@ ListElement* ListFind(List* aList, void* content)	//-通过元素中的目录指针
  */
 ListElement* ListFindItem(List* aList, void* content, int(*callback)(void*, void*))	//-在一个列表中寻找到一个元素,方法可通过定义的回调函数选择
 {
-	ListElement* rc = NULL;
+	ListElement* rc = NULL;	//-列表单元就三个成员:两个指针一个值
 
 	if (aList->current != NULL && ((callback == NULL && aList->current->content == content) ||
 		   (callback != NULL && callback(aList->current->content, content))))
-		rc = aList->current;
+		rc = aList->current;	//-找到一样的了
 	else
 	{
-		ListElement* current = NULL;
+		ListElement* current = NULL;	//-存储当前的节点地址
 
 		/* find the content */
 		while (ListNextElement(aList, &current) != NULL)

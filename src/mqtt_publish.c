@@ -49,12 +49,12 @@ int mqtt_publish_sub(int argc, char ** argv) {
 	} else {
 		printf("mqtt client connect\n");
 	}
-
+	//-上面一个流程仅仅完成了连接请求,协议层的连接可能在另外一个线程中实现的
 	//publish message
 	Qos = QOS_EXACTLY_ONCE; //Qos
 	ret = mqtt_publish(m, topic, "hello from Linkit 7688", Qos);//发布消息
 	printf("mqtt client publish,  return code = %d\n", ret);
-
+	//-下面是和服务器断开连接,并且清除为了连接而建立的系列环境
 	mqtt_disconnect(m); //disconnect
 	mqtt_delete(m);  //delete mqtt client object
 	return 0;

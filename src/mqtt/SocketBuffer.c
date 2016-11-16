@@ -306,7 +306,7 @@ void SocketBuffer_pendingWrite(int socket, SSL* ssl, int count, iobuf* iovecs, i
 #else
 void SocketBuffer_pendingWrite(int socket, int count, iobuf* iovecs, int* frees, int total, int bytes)
 #endif
-{
+{//-套接字写被中断了所以存储剩余的数据
 	int i = 0;
 	pending_writes* pw = NULL;
 

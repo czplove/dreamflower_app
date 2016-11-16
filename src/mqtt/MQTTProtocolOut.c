@@ -94,9 +94,9 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 	aClient->good = 1;
 
 	addr = MQTTProtocol_addressPort(ip_address, &port);	//-通过字符提取出了自己需要的信息:IP地址+端口号
-	rc = Socket_new(addr, port, &(aClient->net.socket));	//-这个里面实现了底层的创建和连接
+	rc = Socket_new(addr, port, &(aClient->net.socket));	//-这个里面实现了底层的创建和连接(硬件链路层)
 	if (rc == EINPROGRESS || rc == EWOULDBLOCK)
-		aClient->connect_state = 1; /* TCP connect called - wait for connect completion */
+		aClient->connect_state = 1; /* TCP connect called - wait for connect completion */	//-通过这个标识位可以知道连接状态
 	else if (rc == 0)
 	{	/* TCP connect completed. If SSL, send SSL connect */
 #if defined(OPENSSL)
@@ -122,7 +122,7 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 				aClient->connect_state = 0;
 		}
 	}
-	if (addr != ip_address)
+	if (addr != ip_address)	//-这里仅仅是防错,阻止可能的内存泄露的
 		free(addr);
 
 	FUNC_EXIT_RC(rc);

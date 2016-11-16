@@ -34,7 +34,38 @@
 
 #include "Heap.h"
 
-
+/**
+Fixed header:
+		|7	6	5	4	3	2	1	0|
+byte 1	|Message Type	DUP flag QoS level RETAIN
+Message Type¹Ì¶¨Îª1
+DUP, QoS, ºÍRETAIN flagsÃ»ÓÐÔÚCONNECTÏûÏ¢ÖÐÊ¹ÓÃ.		
+byte 2	|Remaining Length
+Remaining LengthÊÇvariable header (12 bytes)µÄ³¤¶ÈºÍPayloadµÄ³¤¶È. Õâ¿ÉÒÔÊÇÒ»¸ö¶à×Ö½ÚµÄ×Ö¶Î.
+Variable header:
+Protocol Name
+byte 1	|Length MSB
+byte 2	|Length LSB
+byte 3	|
+byte 4	|
+byte 5	|
+byte 6	|
+byte 7	|
+byte 8	|
+byte 9	|Version
+byte 10	|Connect Flags
+byte 11	|Keep Alive MSB
+byte 12	|Keep Alive LSB
+Payload:
+CONNECTÏûÏ¢µÄpayload°üº¬Ò»¸ö»ò¶à¸öµÄUTF-8±àÂëµÄ×Ö·û´®£¬ ÕâÊÇ»ùÓÚvariable headerÖÐµÄ
+±êÊ¶£¨ flags£© ¡£Èç¹ûÓÐ×Ö·û´®´æÔÚ£¬Ôò±ØÐë°´ÏÂÁÐË³Ðò³öÏÖ:
+Client Identifier
+Will Topic
+Will Message
+User Name
+Password
+Response
+*/
 /**
  * Send an MQTT CONNECT packet down a socket.
  * @param client a structure from which to get all the required values
@@ -49,14 +80,14 @@ int MQTTPacket_send_connect(Clients* client, int MQTTVersion)	//-ÕâÀïºÜ¿ÉÄÜ¾ÍÊÇ×
 
 	FUNC_ENTRY;
 	packet.header.byte = 0;
-	packet.header.bits.type = CONNECT;
+	packet.header.bits.type = CONNECT;	//-ËµÃ÷ÁËÖ¡µÄÀàÐÍ
 
 	len = ((MQTTVersion == 3) ? 12 : 10) + strlen(client->clientID)+2;
-	if (client->will)
+	if (client->will)	//-ÅÐ¶ÏÊÇ·ñÓÐwillÏûÏ¢,ÕâÊÇÁ´½ÓÃüÁîÖÐµÄÒ»¸ö¶«Î÷
 		len += strlen(client->will->topic)+2 + strlen(client->will->msg)+2;
-	if (client->username)
+	if (client->username)	//-ÕâÐ©±êÊ¶Î»Í¬ÑùÒâÎ¶×ÅºóÃæÓÐÐ§ÇøÓòÊÇ·ñº¬ÓÐÕâÐ©ÐÅÏ¢,Èç¹ûÓÐµÄ»°¾ÍÐèÒªÔ¤Áô¿Õ¼ä
 		len += strlen(client->username)+2;
-	if (client->password)
+	if (client->password)	//-ÖØµãÊÇÊ²Ã´ÊÇ·ñ¸øÕâÐ©±êÊ¶Î»¸³ÖµµÄ
 		len += strlen(client->password)+2;
 
 	ptr = buf = malloc(len);
@@ -87,7 +118,7 @@ int MQTTPacket_send_connect(Clients* client, int MQTTVersion)	//-ÕâÀïºÜ¿ÉÄÜ¾ÍÊÇ×
 	if (client->password)
 		packet.flags.bits.password = 1;
 
-	writeChar(&ptr, packet.flags.all);
+	writeChar(&ptr, packet.flags.all);	//-Ç°Ãæ¾­¹ý×éÖ¯,ÕâÀïÊµ¼ÊÏò»º³åÇøÌîÐ´ÄÚÈÝÁË
 	writeInt(&ptr, client->keepAliveInterval);
 	writeUTF(&ptr, client->clientID);
 	if (client->will)

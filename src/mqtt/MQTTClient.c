@@ -478,7 +478,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)	//-*Ê¹ÓÃÒ»¸ö×¨ÃÅµÄÏß³ÌÎ¬»¤Ò»¸ö
 	FUNC_ENTRY;
 	running = 1;
 	run_id = Thread_getid();
-
+	//-´ËÏß³ÌÓÃÓÚÎ¬»¤¿Í»§¶ËµÄÕý³£ÔËÐÐ,±ÈÈçÖÜÆÚ´¦Àí½ÓÊÕµ½µÄÊý¾ÝÄÚÈÝ
 	Thread_lock_mutex(mqttclient_mutex);
 	while (!tostop)
 	{
@@ -495,7 +495,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)	//-*Ê¹ÓÃÒ»¸ö×¨ÃÅµÄÏß³ÌÎ¬»¤Ò»¸ö
 		timeout = 1000L;
 
 		/* find client corresponding to socket */
-		if (ListFindItem(handles, &sock, clientSockCompare) == NULL)
+		if (ListFindItem(handles, &sock, clientSockCompare) == NULL)	//-ÔÚÁ´±íÖÐÑ°ÕÒ¿Í»§¶Ë¶ÔÓ¦µÄÌ×½Ó×Ö
 		{
 			/* assert: should not happen */
 			continue;
@@ -946,7 +946,7 @@ exit:
 //-»°½«ÏÔµÃ±È½Ï·½±ã,Èç¹ûÊÇÒÆÖ²ÐÔµÄ´ó¶¯×÷¾Í¸üÓÐÓÅÊÆÁË,ËùÒÔÐèÒªÑ§Ï°,µ«ÊÇÒªÕÆÎÕ·½·¨,·ñÔòºÜÄÑ
 int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options, const char* serverURI)
 {
-	MQTTClients* m = handle;
+	MQTTClients* m = handle;	//-ÕâÀïÊÇÖµµÃË¼¿¼µÄ,ÕâÑù×öµÄÄ¿µÄ
 	START_TIME_TYPE start;
 	long millisecsTimeout = 30000L;
 	int rc = SOCKET_ERROR;
@@ -961,7 +961,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	m->c->maxInflightMessages = (options->reliable) ? 1 : 10;
 
 	if (m->c->will)
-	{
+	{//-¸Õ¿ªÊ¼Èç¹ûÓÐÄÚÈÝµÄ»°¾ÍÐèÒªÊÍ·ÅÕâÀï
 		free(m->c->will->msg);
 		free(m->c->will->topic);
 		free(m->c->will);
@@ -1012,7 +1012,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	}
 #endif
 
-	m->c->username = options->username;
+	m->c->username = options->username;	//-°Ñ¸÷É«¸÷ÑùµÄ²ÎÊý´æ´¢µ½¿Í»§¶ËÐÅÏ¢±íÖÐ
 	m->c->password = options->password;
 	m->c->retryInterval = options->retryInterval;
 
@@ -1479,7 +1479,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 	if (rc == SOCKET_ERROR)
 	{
 		Thread_unlock_mutex(mqttclient_mutex);
-		MQTTClient_disconnect_internal(handle, 0);
+		MQTTClient_disconnect_internal(handle, 0);	//-Èç¹û³ö´íÁË¾ÍÐèÒªÖ÷¶¯¶Ï¿ªÁ¬½Ó
 		Thread_lock_mutex(mqttclient_mutex);
 		/* Return success for qos > 0 as the send will be retried automatically */
 		rc = (qos > 0) ? MQTTCLIENT_SUCCESS : MQTTCLIENT_FAILURE;
@@ -1556,7 +1556,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 		/* 0 from getReadySocket indicates no work to do, -1 == error, but can happen normally */
 #endif
 		Thread_lock_mutex(socket_mutex);
-		*sock = Socket_getReadySocket(0, &tp);
+		*sock = Socket_getReadySocket(0, &tp);	//-ÀïÃæÓÐÖÜÆÚ¼ì²éÓÐÃ»ÓÐÄÚÈÝÐ´³ö
 		Thread_unlock_mutex(socket_mutex);
 #if defined(OPENSSL)
 	}
@@ -1573,7 +1573,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 				*rc = 0;  /* waiting for connect state to clear */
 			else
 			{
-				pack = MQTTPacket_Factory(&m->c->net, rc);
+				pack = MQTTPacket_Factory(&m->c->net, rc);	//-ÖÜÆÚÐÔµÄ¼ì²éÍøÂçÓÐÃ»ÓÐÄÚÈÝ½ÓÊÕµ½
 				if (*rc == TCPSOCKET_INTERRUPTED)
 					*rc = 0;
 			}

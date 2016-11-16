@@ -240,13 +240,13 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 		memcpy((void*)&(s.rset), (void*)&(s.rset_saved), sizeof(s.rset));
 		memcpy((void*)&(pwset), (void*)&(s.pending_wset), sizeof(pwset));
 		if ((rc = select(s.maxfdp1, &(s.rset), &pwset, NULL, &timeout)) == SOCKET_ERROR)	//-多路检测可用套接字,确定套接字的状态
-		{
+		{//-检查一个集合中的套接字的状态,这个集合由FD_SET设置
 			Socket_error("read select", 0);
 			goto exit;
 		}
 		Log(TRACE_MAX, -1, "Return code %d from read select", rc);
 
-		if (Socket_continueWrites(&pwset) == SOCKET_ERROR)
+		if (Socket_continueWrites(&pwset) == SOCKET_ERROR)	//-周期性的检查悬挂内容,如果有的话就写出去
 		{
 			rc = 0;
 			goto exit;
@@ -301,7 +301,7 @@ int Socket_getch(int socket, char* c)	//-这里所有的数据都需要对队列的操作,然后再
 	if ((rc = SocketBuffer_getQueuedChar(socket, c)) != SOCKETBUFFER_INTERRUPTED)
 		goto exit;
 
-	if ((rc = recv(socket, c, (size_t)1, 0)) == SOCKET_ERROR)
+	if ((rc = recv(socket, c, (size_t)1, 0)) == SOCKET_ERROR)	//-获得套接字数据
 	{
 		int err = Socket_error("recv - getch", socket);
 		if (err == EWOULDBLOCK || err == EAGAIN)
@@ -345,7 +345,7 @@ char *Socket_getdata(int socket, int bytes, int* actual_len)	//-从套接字中获得一
 
 	buf = SocketBuffer_getQueuedData(socket, bytes, actual_len);
 	//-下面的函数才是从接收缓冲区复制数据,上面应该是在队列中寻找空间
-	if ((rc = recv(socket, buf + (*actual_len), (size_t)(bytes - (*actual_len)), 0)) == SOCKET_ERROR)
+	if ((rc = recv(socket, buf + (*actual_len), (size_t)(bytes - (*actual_len)), 0)) == SOCKET_ERROR)	//-*得到套接字数据
 	{//-发生错误
 		rc = Socket_error("recv - getdata", socket);
 		if (rc != EAGAIN && rc != EWOULDBLOCK)
@@ -379,7 +379,7 @@ exit:
  *  Indicate whether any data is pending outbound for a socket.
  *  @return boolean - true == data pending.
  */
-int Socket_noPendingWrites(int socket)
+int Socket_noPendingWrites(int socket)	//-在写悬挂链表中检查这个套接字上是否有内容没有发送出去
 {
 	int cursock = socket;
 	return ListFindItem(s.write_pending, &cursock, intcompare) == NULL;
@@ -395,7 +395,7 @@ int Socket_noPendingWrites(int socket)
  *  @param bytes number of bytes actually written returned
  *  @return completion code, especially TCPSOCKET_INTERRUPTED
  */
-int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)
+int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)	//-里面没有什么特殊的仅仅对库函数的标识位进行了判断处理
 {
 	int rc;
 
@@ -446,7 +446,7 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 
 	FUNC_ENTRY;
 	if (!Socket_noPendingWrites(socket))	//-在写之前判断下是否有正准备发还没有发的
-	{//-
+	{//-如果这个套接字上还有内容发送发送出去,那么就写的话就报错
 		Log(LOG_SEVERE, -1, "Trying to write to socket %d for which there is already pending output", socket);
 		rc = SOCKET_ERROR;
 		goto exit;
@@ -468,7 +468,7 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 	if ((rc = Socket_writev(socket, iovecs, count+1, &bytes)) != SOCKET_ERROR)	//-这里实现了数据的最终发送出去
 	{
 		if (bytes == total)
-			rc = TCPSOCKET_COMPLETE;
+			rc = TCPSOCKET_COMPLETE;	//-发送完成了
 		else
 		{//-没有完成发送的后续处理
 			int* sockmem = (int*)malloc(sizeof(int));
@@ -477,11 +477,11 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 #if defined(OPENSSL)
 			SocketBuffer_pendingWrite(socket, NULL, count+1, iovecs, frees1, total, bytes);
 #else
-			SocketBuffer_pendingWrite(socket, count+1, iovecs, frees1, total, bytes);
+			SocketBuffer_pendingWrite(socket, count+1, iovecs, frees1, total, bytes);	//-在链表中记录下了这个信息
 #endif
 			*sockmem = socket;
 			ListAppend(s.write_pending, sockmem, sizeof(int));
-			FD_SET(socket, &(s.pending_wset));
+			FD_SET(socket, &(s.pending_wset));	//-将fd加入set集合
 			rc = TCPSOCKET_INTERRUPTED;
 		}
 	}
@@ -578,7 +578,7 @@ void Socket_close(int socket)	//-本身套接字的关闭很简单,但是在这个系统中还有自己
 	FUNC_EXIT;
 }
 
-
+//-我需要吃透所有的内容,但是也要进行模块处理,当我不关心的时候要能够以模块进行使用,主要思考的层次
 /**
  *  Create a new socket and TCP connect to an address/port
  *  @param addr the address string
@@ -586,7 +586,7 @@ void Socket_close(int socket)	//-本身套接字的关闭很简单,但是在这个系统中还有自己
  *  @param sock returns the new socket
  *  @return completion code
  */
-int Socket_new(char* addr, int port, int* sock)
+int Socket_new(char* addr, int port, int* sock)	//-这里实现的是硬件连接(套接字),使用TCP连接到一个地址
 {
 	int type = SOCK_STREAM;
 	struct sockaddr_in address;
@@ -610,19 +610,19 @@ int Socket_new(char* addr, int port, int* sock)
 
 	if ((rc = getaddrinfo(addr, NULL, &hints, &result)) == 0)	//-调用了库函数,0——成功，非0——出错
 	{//-getaddrinfo函数能够处理名字到地址以及服务到端口这两种转换，返回的是一个addrinfo的结构（列表）指针而不是一个地址清单。
-		struct addrinfo* res = result;
+		struct addrinfo* res = result;	//-通过上面函数解析出来的结果保存在这里
 
 		/* prefer ip4 addresses */
 		while (res)
 		{
-			if (res->ai_family == AF_INET)
+			if (res->ai_family == AF_INET)	//-ai_family指定了地址族
 			{
 				result = res;
 				break;
 			}
-			res = res->ai_next;
+			res = res->ai_next;	//-利用指向addrinfo结构体链表的指针,进行一个元素一个元素的查找
 		}
-
+		//-首先对名字进行信息转化,然后再判断使用
 		if (result == NULL)
 			rc = -1;
 		else
@@ -636,15 +636,15 @@ int Socket_new(char* addr, int port, int* sock)
 		else
 #endif
 		if (result->ai_family == AF_INET)
-		{
-			address.sin_port = htons(port);
+		{//-AF_INET          2            IPv4 
+			address.sin_port = htons(port);	//-将整型变量从主机字节顺序转变成网络字节顺序
 			address.sin_family = family = AF_INET;
 			address.sin_addr = ((struct sockaddr_in*)(result->ai_addr))->sin_addr;
 		}
 		else
 			rc = -1;
 
-		freeaddrinfo(result);
+		freeaddrinfo(result);	//-由getaddrinfo返回的存储空间，包括addrinfo结构、ai_addr结构和ai_canonname字符串，都是用malloc动态获取的。这些空间可调用 freeaddrinfo释放。
 	}
 	else
 	  	Log(LOG_ERROR, -1, "getaddrinfo failed for addr %s with rc %d", addr, rc);
@@ -653,7 +653,7 @@ int Socket_new(char* addr, int port, int* sock)
 		Log(LOG_ERROR, -1, "%s is not a valid IP address", addr);
 	else
 	{
-		*sock =	socket(family, type, 0);	//-*到这里就是最"底层"的库了,下面的就不需要去考虑了,
+		*sock =	socket(family, type, 0);	//-*到这里就是最"底层"的库了,下面的就不需要去考虑了,,创建了一个套接字
 		if (*sock == INVALID_SOCKET)	//-上面创建一个套接字,如果成功将返回一个套接字描述符
 			rc = Socket_error("socket", *sock);
 		else
@@ -666,7 +666,7 @@ int Socket_new(char* addr, int port, int* sock)
 #endif
 
 			Log(TRACE_MIN, -1, "New socket %d for %s, port %d",	*sock, addr, port);
-			if (Socket_addSocket(*sock) == SOCKET_ERROR)	//-前面可以知道是实现增加套接字到链表,实际如何操作的再说
+			if (Socket_addSocket(*sock) == SOCKET_ERROR)	//-增加一个套接字到套接字链表,并修改了一些属性值
 				rc = Socket_error("setnonblocking", *sock);
 			else
 			{
@@ -677,13 +677,14 @@ int Socket_new(char* addr, int port, int* sock)
 				else
 					rc = connect(*sock, (struct sockaddr*)&address6, sizeof(address6));
 	#endif
+				//-上面使用库函数实现了套接字的连接,更低层的东西不需要知道,知道到这个层次就够了
 				if (rc == SOCKET_ERROR)
 					rc = Socket_error("connect", *sock);
 				if (rc == EINPROGRESS || rc == EWOULDBLOCK)
-				{
-					int* pnewSd = (int*)malloc(sizeof(int));
+				{//-EINPROGRESS，那么就代表连接还在进行中;报告EWOULDBLOCK是正常的，因为建立一个连接必须花费一些时间。
+					int* pnewSd = (int*)malloc(sizeof(int));	//-对于一个全局变量不是一开始就定义一个全局变量,而是当需要的时候再申请,不用再销毁
 					*pnewSd = *sock;
-					ListAppend(s.connect_pending, pnewSd, sizeof(int));
+					ListAppend(s.connect_pending, pnewSd, sizeof(int));	//-这里连接被挂起了,我们存储到挂起链表中,后面逻辑处理
 					Log(TRACE_MIN, 15, "Connect pending");
 				}
 			}
