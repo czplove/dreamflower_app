@@ -161,7 +161,19 @@ void* MQTTPacket_connack(unsigned char aHeader, char* data, size_t datalen)	//-Á
 	return pack;
 }
 
-
+/**
+Fixed header:
+		|7	6	5	4	3	2	1	0|
+byte 1	|Message Type	DUP flag QoS level RETAIN
+Message Type¹Ì¶¨Îª1
+DUP, QoS, ºÍRETAIN flagsÃ»ÓÐÔÚCONNECTÏûÏ¢ÖÐÊ¹ÓÃ.		
+byte 2	|Remaining Length
+Remaining LengthÊÇvariable header (12 bytes)µÄ³¤¶ÈºÍPayloadµÄ³¤¶È. Õâ¿ÉÒÔÊÇÒ»¸ö¶à×Ö½ÚµÄ×Ö¶Î.ÕâÀï=0
+Variable header:
+ÎÞ
+Payload:
+ÎÞ
+*/
 /**
  * Send an MQTT PINGREQ packet down a socket.
  * @param socket the open socket to send the data to
@@ -172,11 +184,11 @@ int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)	//-pingÇë
 {
 	Header header;
 	int rc = 0;
-	size_t buflen = 0;
+	size_t buflen = 0;	//-±íÊ¾ÓÐÐ§»º³åÇø³ß´ç
 
 	FUNC_ENTRY;
-	header.byte = 0;
-	header.bits.type = PINGREQ;
+	header.byte = 0;	//-±íÊ¾×Ö½Ú³¤¶ÈÎª0
+	header.bits.type = PINGREQ;	//-·¢ËÍ±¨ÎÄµÄÀàÐÍ
 	rc = MQTTPacket_send(net, header, NULL, buflen,0);	//-ÓÐ×ã¹»µÄ±êÊ¶Î»¾Í¿ÉÒÔ·¢ËÍ
 	Log(LOG_PROTOCOL, 20, NULL, net->socket, clientID, rc);
 	FUNC_EXIT_RC(rc);

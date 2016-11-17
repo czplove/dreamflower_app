@@ -510,19 +510,19 @@ void MQTTProtocol_keepalive(time_t now)	//-通过调用这个子函数,可以使这个保持活跃
 	ListElement* current = NULL;
 
 	FUNC_ENTRY;
-	ListNextElement(bstate->clients, &current);
+	ListNextElement(bstate->clients, &current);	//-在一个链表中寻找到一个元素
 	while (current)
-	{
-		Clients* client =	(Clients*)(current->content);
-		ListNextElement(bstate->clients, &current); 
+	{//-对一个客户端进行检查
+		Clients* client =	(Clients*)(current->content);	//-指向一个客户端实体参数
+		ListNextElement(bstate->clients, &current);		//-切换下一个客户端,准备检查,直到没有
 		if (client->connected && client->keepAliveInterval > 0 &&
 			(difftime(now, client->net.lastSent) >= client->keepAliveInterval ||
 					difftime(now, client->net.lastReceived) >= client->keepAliveInterval))
-		{
-			if (client->ping_outstanding == 0)
+		{//-检查每个用到的客户端,如果超时了就需要处理,否则不需要
+			if (client->ping_outstanding == 0)	//-没有清空说明没有接收到应答
 			{
-				if (Socket_noPendingWrites(client->net.socket))
-				{
+				if (Socket_noPendingWrites(client->net.socket))	//-如果有内容没有发送出去就不需要ping了
+				{//-如果在一段时间内没有数据交换,那么客户端就需要主动向服务器发送ping请求
 					if (MQTTPacket_send_pingreq(&client->net, client->clientID) != TCPSOCKET_COMPLETE)
 					{
 						Log(TRACE_PROTOCOL, -1, "Error sending PINGREQ for client %s on socket %d, disconnecting", client->clientID, client->net.socket);
@@ -531,14 +531,14 @@ void MQTTProtocol_keepalive(time_t now)	//-通过调用这个子函数,可以使这个保持活跃
 					else
 					{
 						client->net.lastSent = now;
-						client->ping_outstanding = 1;
+						client->ping_outstanding = 1;	//-已经发送出去了一个ping请求帧
 					}
 				}
 			}
 			else
-			{
+			{//-ping应答没有被接收到,在活跃间隔内
 				Log(TRACE_PROTOCOL, -1, "PINGRESP not received in keepalive interval for client %s on socket %d, disconnecting", client->clientID, client->net.socket);
-				MQTTProtocol_closeSession(client, 1);
+				MQTTProtocol_closeSession(client, 1);	//-所以这里需要断开连接
 			}
 		}
 	}
@@ -630,9 +630,9 @@ void MQTTProtocol_retry(time_t now, int doRetry, int regardless)	//-再次重试协议
 	ListNextElement(bstate->clients, &current);
 	/* look through the outbound message list of each client, checking to see if a retry is necessary */
 	while (current)	//-通过查询标识位,看看是否有必要重试写
-	{
-		Clients* client = (Clients*)(current->content);
-		ListNextElement(bstate->clients, &current);
+	{//-一个客户端一个客户端轮询
+		Clients* client = (Clients*)(current->content);	//-指向客户端的实体
+		ListNextElement(bstate->clients, &current);	//-切换到下一个准备查询
 		if (client->connected == 0)
 			continue;
 		if (client->good == 0)

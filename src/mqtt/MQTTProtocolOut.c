@@ -119,7 +119,7 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 			if ((rc = MQTTPacket_send_connect(aClient, MQTTVersion)) == 0)
 				aClient->connect_state = 3; /* MQTT Connect sent - wait for CONNACK */ //-Õâ¸ö±äÁ¿¼ÇÂ¼ÁËÄ¿Ç°MQTTĞ­ÒéËù´¦µÄ×´Ì¬,»òÕßËµÄÄ¸öÁ÷³ÌÖĞ
 			else
-				aClient->connect_state = 0;
+				aClient->connect_state = 0;	//-MQTTÁ¬½ÓÃüÁî»¹Ã»ÓĞÍêÈ«·¢ËÍ³öÈ¥
 		}
 	}
 	if (addr != ip_address)	//-ÕâÀï½ö½öÊÇ·À´í,×èÖ¹¿ÉÄÜµÄÄÚ´æĞ¹Â¶µÄ
@@ -142,7 +142,7 @@ int MQTTProtocol_handlePingresps(void* pack, int sock)	//-ÕâÀï¶¼ÊÇ´¦Àí¸÷ÖÖÖ¡µÄ,¶
 	int rc = TCPSOCKET_COMPLETE;
 
 	FUNC_ENTRY;
-	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);
+	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);	//-¸ù¾İÌ×½Ó×ÖÑ°ÕÒµ½¶ÔÓ¦µÄ¿Í»§¶Ë
 	Log(LOG_PROTOCOL, 21, NULL, sock, client->clientID);
 	client->ping_outstanding = 0;	//-¿ÉÄÜ¾ÍÊÇÉèÖÃÏÂ±êÊ¶Î»¾Í¿ÉÒÔÖªµÀ¶ÔÓÚĞÅÏ¢ÁË
 	FUNC_EXIT_RC(rc);

@@ -217,15 +217,15 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 	struct timeval timeout = one;
 
 	FUNC_ENTRY;
-	if (s.clientsds->count == 0)
-		goto exit;
+	if (s.clientsds->count == 0)	//-判断在套接字链表中的套接字描述符个数
+		goto exit;	//-如果没有说明没有套接字,那么就不会有等待的
 
-	if (more_work)
+	if (more_work)	//-选择的时间不同
 		timeout = zero;
 	else if (tp)
 		timeout = *tp;
 
-	while (s.cur_clientsds != NULL)
+	while (s.cur_clientsds != NULL)	//-指向当前的套接字描述符,记录的是一个链表元素,通过这个可以定位到链表中的一个点,然后可以找到所有
 	{
 		if (isReady(*((int*)(s.cur_clientsds->content)), &(s.rset), &wset))
 			break;
@@ -233,7 +233,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 	}
 
 	if (s.cur_clientsds == NULL)
-	{
+	{//-如果当前的套接字描述符不存在
 		int rc1;
 		fd_set pwset;
 

@@ -400,9 +400,9 @@ void ListFreeNoContent(List* aList)	//?移除但是不释放所有的列表元素,而仅仅是释放
  * This is updated on return to the same value as that returned from this function
  * @return pointer to the current list element
  */
-ListElement* ListNextElement(List* aList, ListElement** pos)	//-寻找列表的一个元素
+ListElement* ListNextElement(List* aList, ListElement** pos)	//-指定链表的下一个元素
 {
-	return *pos = (*pos == NULL) ? aList->first : (*pos)->next;
+	return *pos = (*pos == NULL) ? aList->first : (*pos)->next;	//-如果没有的话就取整个链表的第一个点,否则取指定元素的下一个
 }
 
 

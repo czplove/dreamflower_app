@@ -524,7 +524,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)	//-*Ê¹ÓÃÒ»¸ö×¨ÃÅµÄÏß³ÌÎ¬»¤Ò»¸ö
 				if (m->c->connect_state == 3 && !Thread_check_sem(m->connack_sem))
 				{
 					Log(TRACE_MIN, -1, "Posting connack semaphore for client %s", m->c->clientID);
-					Thread_post_sem(m->connack_sem);
+					Thread_post_sem(m->connack_sem);	//-¸øÐÅºÅÁ¿¼ÓÒ»µÄÄ¿µÄÊÇÊ²Ã´
 				}
 			}
 		}
@@ -571,7 +571,7 @@ thread_return_type WINAPI MQTTClient_run(void* n)	//-*Ê¹ÓÃÒ»¸ö×¨ÃÅµÄÏß³ÌÎ¬»¤Ò»¸ö
 				{
 					Log(TRACE_MIN, -1, "Posting unsuback semaphore for client %s", m->c->clientID);
 					m->pack = pack;
-					Thread_post_sem(m->unsuback_sem);
+					Thread_post_sem(m->unsuback_sem);	//-Í¨¹ý¿ØÖÆÐÅºÅÁ¿,¾ö¶¨±ðµÄ½ø³ÌµÄ±êÖ¾
 				}
 			}
 			else if (m->c->connect_state == 1 && !Thread_check_sem(m->connect_sem))
@@ -883,7 +883,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 #endif
 
 	if (m->c->connect_state == 3) /* MQTT connect sent - wait for CONNACK */
-	{
+	{//-ËµÃ÷ÇëÇóÁ¬½ÓÃûÒåÒÑ¾­·¢ËÍ³öÈ¥ÁË,ÏÂÃæÐèÒªµÈ´ýÓ¦´ð
 		MQTTPacket* pack = NULL;
 
 		Thread_unlock_mutex(mqttclient_mutex);
@@ -899,7 +899,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 			{
 				m->c->connected = 1;
 				m->c->good = 1;
-				m->c->connect_state = 0;
+				m->c->connect_state = 0;	//?ÊÕµ½Ó¦´ðÖ®ºó±äÎª0
 				if (MQTTVersion == 4)
 					sessionPresent = connack->flags.bits.sessionPresent;
 				if (m->c->cleansession)
@@ -1170,7 +1170,7 @@ exit:
 	if (internal && m->cl && was_connected)
 	{
 		Log(TRACE_MIN, -1, "Calling connectionLost for client %s", m->c->clientID);
-		Thread_start(connectionLost_call, m);
+		Thread_start(connectionLost_call, m);	//-¶Ï¿ªÁ¬½ÓÁË»¹ÐèÒªÒ»¸öÏß³ÌÎ¬»¤?
 	}
 	Thread_unlock_mutex(mqttclient_mutex);
 	FUNC_EXIT_RC(rc);
@@ -1518,17 +1518,28 @@ exit:
 	return rc;
 }
 
-
+/*
+Keep Alive timerÎ»ÓÚMQTT CONNECTÏûÏ¢µÄ¿É±ä±¨ÎÄÍ·£¨variable header£©ÖÐ¡£
+Keep Alive timerÎªÃë¼¶, ¶¨ÒåÁË¿Í»§¶Ë½ÓÊÕÏûÏ¢Ê±ÏûÏ¢Ö®¼äµÄ×î´óÊ±¼ä¼ä¸ô¡£ ÕâÑù£¬·þÎñÆ÷ÎÞÐèµÈ
+´ýºÜ³¤µÄTCP/IP³¬Ê±Ê±¼ä¼´¿É·¢ÏÖÓë¿Í»§¶ËµÄÁ¬½ÓÒÑ¾­¶ÏÁË¡£
+¿Í»§¶ËÓÐÒåÎñÔÚÃ¿Ò»¸öKeep Alive timeÄÚ·¢ÉúÒ»¸öÏûÏ¢. ÔÚÕâ¸öÊ±¼äÖÜÆÚÄÚ£¬Èç¹ûÃ»ÓÐÒµÎñÊý¾ÝÏà¹Ø
+£¨data-related£©µÄÏûÏ¢£¬¿Í»§¶Ë»á·¢Ò»¸öPINGREQ£¬ÏàÓ¦µÄ£¬·þÎñÆ÷»á·µ»ØÒ»¸öPINGRESPÏûÏ¢½øÐÐÈ·
+ÈÏ¡££¨ÀàËÆÐÄÌø»úÖÆ£©
+Èç¹û·þÎñÆ÷ÔÚÒ»¸ö°ë£¨1.5£©µÄKeep AliveÊ±¼äÖÜÆÚÄÚÃ»ÓÐÊÕµ½À´×Ô¿Í»§¶ËµÄÏûÏ¢£¬¾Í»á¶Ï¿ªÓë¿Í»§
+¶ËµÄÁ¬½Ó£¬¾ÍÏñ¿Í»§¶Ë·¢ËÍÁËÒ»¸öDISCONNECTÏûÏ¢Ò»Ñù¡£ ¶Ï¿ªÁ¬½Ó²»»áÓ°ÏìÕâ¸ö¿Í»§¶ËµÄÈÎºÎ¶©ÔÄ¡£
+Èç¹û¿Í»§¶ËÔÚ·¢ËÍÁËPINGREQÏûÏ¢ºóµÄÒ»¸öKeep AliveÖÜÆÚÄÚÃ»ÓÐÊÕµ½PINGRESPÏûÏ¢Ó¦´ð£¬Ó¦¸Ã¹Ø
+±ÕTCP/IP socketÁ¬½Ó¡£
+*/
 void MQTTClient_retry(void)	//-ÔÙ´Î³¢ÊÔ
 {
 	time_t now;
 
 	FUNC_ENTRY;
 	time(&(now));
-	if (difftime(now, last) > 5)
+	if (difftime(now, last) > 5)	//-×îÐ¡Ã¿5SÖÓ½øÈëÒ»´ÎÅÐ¶Ï,Èç¹û´óÁË¾ÍÐèÒª·¢ËÍÒ»¸öpingÇëÇóÖ¡
 	{
 		time(&(last));
-		MQTTProtocol_keepalive(now);
+		MQTTProtocol_keepalive(now);	//-Õë¶Ô»îÔ¾½øÐÐÅÐ¶Ï,Èç¹ûÐèÒªµÄ»°·¢ËÍÒ»¸öPINGREQ
 		MQTTProtocol_retry(now, 1, 0);
 	}
 	else
@@ -1541,7 +1552,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 {
 	struct timeval tp = {0L, 0L};
 	static Ack ack;
-	MQTTPacket* pack = NULL;
+	MQTTPacket* pack = NULL;	//-Õâ¸öÊý¾Ý½á¹¹Ö¸ÏòÁËMQTTÖ¡µÄÍ·²¿
 
 	FUNC_ENTRY;
 	if (timeout > 0L)
@@ -1578,14 +1589,14 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 					*rc = 0;
 			}
 		}
-		if (pack)
+		if (pack)	//-Èç¹ûÑ°ÕÒµ½ÓÐÐ§Í·²¿¾Í¿ªÊ¼·ÖÎö±¨ÎÄ
 		{
 			int freed = 1;
 
 			/* Note that these handle... functions free the packet structure that they are dealing with */
-			if (pack->header.bits.type == PUBLISH)
+			if (pack->header.bits.type == PUBLISH)	//-Õâ¸öÇø¶Î´ú±íÏûÏ¢ÀàÐÍµÄÒâË¼,ÏÖÔÚ×Ü¹²¶¨ÒåÁË14ÖÖ,,·¢²¼ÏûÏ¢
 				*rc = MQTTProtocol_handlePublishes(pack, *sock);
-			else if (pack->header.bits.type == PUBACK || pack->header.bits.type == PUBCOMP)
+			else if (pack->header.bits.type == PUBACK || pack->header.bits.type == PUBCOMP)	//-·¢²¼È·ÈÏ	·¢²¼Íê³É
 			{
 				int msgid;
 
@@ -1599,12 +1610,12 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 					(*(m->dc))(m->context, msgid);
 				}
 			}
-			else if (pack->header.bits.type == PUBREC)
+			else if (pack->header.bits.type == PUBREC)	//-·¢²¼ÏûÏ¢ÊÕµ½
 				*rc = MQTTProtocol_handlePubrecs(pack, *sock);
-			else if (pack->header.bits.type == PUBREL)
+			else if (pack->header.bits.type == PUBREL)	//-·¢²¼ÏûÏ¢·Ö·¢
 				*rc = MQTTProtocol_handlePubrels(pack, *sock);
-			else if (pack->header.bits.type == PINGRESP)
-				*rc = MQTTProtocol_handlePingresps(pack, *sock);
+			else if (pack->header.bits.type == PINGRESP)	//-pingÏìÓ¦
+				*rc = MQTTProtocol_handlePingresps(pack, *sock);	//-ÕâÀï¾ÍÍê³ÉÁËÒ»¸ö×î¼òµ¥µÄ½»»¥ºÍ·þÎñÆ÷Ö®¼ä
 			else
 				freed = 0;
 			if (freed)
@@ -1633,13 +1644,13 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 
 	if (running)
 	{
-		if (packet_type == CONNECT)
+		if (packet_type == CONNECT)	//-µÈ´ýµÄÀàÐÍ
 		{
 			if ((*rc = Thread_wait_sem(m->connect_sem, timeout)) == 0)
 				*rc = m->rc;
 		}
 		else if (packet_type == CONNACK)
-			*rc = Thread_wait_sem(m->connack_sem, timeout);
+			*rc = Thread_wait_sem(m->connack_sem, timeout);	//-µÈ´ýÒ»¸öÐÅºÅÁ¿µÄ·¢ËÍ,»òÕß³¬Ê±
 		else if (packet_type == SUBACK)
 			*rc = Thread_wait_sem(m->suback_sem, timeout);
 		else if (packet_type == UNSUBACK)
