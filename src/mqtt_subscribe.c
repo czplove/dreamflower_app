@@ -53,7 +53,7 @@ int mqtt_subscribe_sub(int argc, char ** argv) {
 	ret = mqtt_subscribe(m, topic, Qos);//订阅消息
 	printf("mqtt client subscribe %s,  return code = %d\n", topic, ret);
 
-	signal(SIGINT, stop_running);
+	signal(SIGINT, stop_running);	//?发送信号量
 	signal(SIGTERM, stop_running);
 
 	printf("wait for message of topic: %s ...\n", topic);

@@ -149,7 +149,7 @@ exit:
  * @return pointer to the packet structure
  */
 void* MQTTPacket_connack(unsigned char aHeader, char* data, size_t datalen)	//-连接确认
-{
+{//-这条指令肯定是不需要客户端发送出去的,这里有说明服务器和客户端使用的是同一个库
 	Connack* pack = malloc(sizeof(Connack));
 	char* curdata = data;
 
@@ -195,7 +195,20 @@ int MQTTPacket_send_pingreq(networkHandles* net, const char* clientID)	//-ping请
 	return rc;
 }
 
-
+/**
+Fixed header:
+		|7	6	5	4	3	2	1	0|
+byte 1	|Message Type	DUP flag	QoS level	RETAIN
+Message Type固定为8
+使用QoS级别1来确认多个订阅请求，响应的SUBACK通过匹配Message ID来识别。
+DUP flag设置为零（ 0）。这意味着这个消息正在被第一次发送。
+byte 2	|Remaining Length
+Remaining Length是variable header (12 bytes)的长度和Payload的长度. 这可以是一个多字节的字段.
+Variable header:
+variable header包含一个Message ID，因为SUBSCRIBE消息的QoS级别为1。
+Payload:
+包含一个客户端希望订阅的主题名列表和客户端要接收消息的QoS级别。这些 topic/QoS成对连续包装
+*/
 /**
  * Send an MQTT subscribe packet down a socket.
  * @param topics list of topics
@@ -219,21 +232,21 @@ int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, netw
 	header.bits.dup = dup;
 	header.bits.qos = 1;
 	header.bits.retain = 0;
-
-	datalen = 2 + topics->count * 3; // utf length + char qos == 3
-	while (ListNextElement(topics, &elem))
+	//-上面是根据帧类型给帧填内容
+	datalen = 2 + topics->count * 3; // utf length + char qos == 3,,乘以3的原因是每个主题固定有长度2个字节品质1个字节,其它主题名称是不固定的
+	while (ListNextElement(topics, &elem))	//-订阅的主题被形成了一个链表,这里一个个检索出来
 		datalen += strlen((char*)(elem->content));
-	ptr = data = malloc(datalen);
+	ptr = data = malloc(datalen);	//-计算出了整个报文的字节数
 
-	writeInt(&ptr, msgid);
-	elem = NULL;
+	writeInt(&ptr, msgid);	//-开始填写内容
+	elem = NULL;	//-为了从头开始找
 	while (ListNextElement(topics, &elem))
 	{
 		ListNextElement(qoss, &qosElem);
 		writeUTF(&ptr, (char*)(elem->content));
 		writeChar(&ptr, *(int*)(qosElem->content));
 	}
-	rc = MQTTPacket_send(net, header, data, datalen, 1);
+	rc = MQTTPacket_send(net, header, data, datalen, 1);	//-最终把组织好的内容发送出去
 	Log(LOG_PROTOCOL, 22, NULL, net->socket, clientID, msgid, rc);
 	if (rc != TCPSOCKET_INTERRUPTED)
 		free(data);
@@ -250,7 +263,7 @@ int MQTTPacket_send_subscribe(List* topics, List* qoss, int msgid, int dup, netw
  * @return pointer to the packet structure
  */
 void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)	//-订阅确认
-{
+{//-这里很有可能也包含了服务器的程序,只是上面都是按照客户端的来的,但是库是统一的
 	Suback* pack = malloc(sizeof(Suback));
 	char* curdata = data;
 
@@ -269,7 +282,20 @@ void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)	//-订
 	return pack;
 }
 
-
+/**
+Fixed header:
+		|7	6	5	4	3	2	1	0|
+byte 1	|Message Type	DUP flag	QoS level	RETAIN
+Message Type固定为10
+用QoS level 1来确认多个取消订阅请求。相应的UNSUBACK消息使用这个MessageID来进行识别。
+DUP flag设置为零（ 0）。这意味着这个消息正在被第一次发送。
+byte 2	|Remaining Length
+Remaining Length是variable header 的长度和Payload的长度. 这可以是一个多字节的字段.
+Variable header:
+variable header包含一个Message ID，因为SUBSCRIBE消息的QoS级别为1。
+Payload:
+客户端在payload里取消对一系列主题的取消订阅。字符串都是UTF编码格式，且紧挨着一起打包。
+*/
 /**
  * Send an MQTT unsubscribe packet down a socket.
  * @param topics list of topics
@@ -280,7 +306,7 @@ void* MQTTPacket_suback(unsigned char aHeader, char* data, size_t datalen)	//-订
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
 int MQTTPacket_send_unsubscribe(List* topics, int msgid, int dup, networkHandles* net, const char* clientID)	//-发送一个MQTT取消订阅帧到一个套接字
-{
+{//-这里就是发送一个订阅取消帧,通知服务器什么主题被取消了
 	Header header;
 	char *data, *ptr;
 	int rc = -1;

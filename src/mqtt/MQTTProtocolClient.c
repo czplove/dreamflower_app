@@ -66,15 +66,15 @@ int messageIDCompare(void* a, void* b)	//-对这样的东西进行比较,
  * @param client a client structure
  * @return the next message id to use, or 0 if none available
  */
-int MQTTProtocol_assignMsgId(Clients* client)	//-为客户端分配一个新的信息ID
+int MQTTProtocol_assignMsgId(Clients* client)	//-为客户端分配一个新的信息ID,这个原则上序列增加,但不是硬性规定,不重复就行
 {
 	int start_msgid = client->msgID;
 	int msgid = start_msgid;
 
 	FUNC_ENTRY;
-	msgid = (msgid == MAX_MSG_ID) ? 1 : msgid + 1;
+	msgid = (msgid == MAX_MSG_ID) ? 1 : msgid + 1;	//-序列加一
 	while (ListFindItem(client->outboundMsgs, &msgid, messageIDCompare) != NULL)	//-又得查列表
-	{
+	{//-如果没有重复的话就认为合适了
 		msgid = (msgid == MAX_MSG_ID) ? 1 : msgid + 1;
 		if (msgid == start_msgid) 
 		{ /* we've tried them all - none free */
@@ -247,6 +247,11 @@ void MQTTProtocol_removePublication(Publications* p)
 	FUNC_EXIT;
 }
 
+/*
+PUBREC消息是用来响应QoS级别为2的PUBLISH消息的。这是QoS级别为2的protocol flow（ 协议流）
+的第二个消息。 PUBREC消息由服务器发送以响应发布客户端的PUBLISH消息，或者由订阅者发送以响应
+来自服务器的PUBLISH消息。
+*/
 /**
  * Process an incoming publish packet for a socket
  * @param pack pointer to the publish packet
@@ -391,7 +396,12 @@ int MQTTProtocol_handlePubrecs(void* pack, int sock)
 	return rc;
 }
 
-
+/*
+PUBREL消息是QoS级别为2的协议流的第3个消息。
+PUBREL消息用用来响应PUBREC消息的，可以是发布者对来自服务器的PUBREC的响应，也可以是
+服务器对来自订阅者的PUBREC的响应。
+（双方互相确认，确保发布的消息到了server，也到了各个订阅者）
+*/
 /**
  * Process an incoming pubrel packet for a socket
  * @param pack pointer to the publish packet
@@ -451,7 +461,10 @@ int MQTTProtocol_handlePubrels(void* pack, int sock)
 	return rc;
 }
 
-
+/*
+这是QoS基本为2的协议流的第4个，也是最后一个消息。
+这个消息是对PUBREL消息的响应。
+*/
 /**
  * Process an incoming pubcomp packet for a socket
  * @param pack pointer to the publish packet

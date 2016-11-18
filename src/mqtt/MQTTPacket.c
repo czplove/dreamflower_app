@@ -473,15 +473,15 @@ void* MQTTPacket_header_only(unsigned char aHeader, char* data, size_t datalen)	
  * @param socket the open socket to send the data to
  * @return the completion code (e.g. TCPSOCKET_COMPLETE)
  */
-int MQTTPacket_send_disconnect(networkHandles *net, const char* clientID)	//-客户端正在端口连接
+int MQTTPacket_send_disconnect(networkHandles *net, const char* clientID)	//-客户端向服务器发送断开连接通知帧
 {
 	Header header;
 	int rc = 0;
 
 	FUNC_ENTRY;
 	header.byte = 0;
-	header.bits.type = DISCONNECT;
-	rc = MQTTPacket_send(net, header, NULL, 0, 0);
+	header.bits.type = DISCONNECT;	//-记录发送帧的类型
+	rc = MQTTPacket_send(net, header, NULL, 0, 0);	//-这个网络里面有一个套接字,通过这个套接字把信息发送出去
 	Log(LOG_PROTOCOL, 28, NULL, net->socket, clientID, rc);
 	FUNC_EXIT_RC(rc);
 	return rc;
@@ -587,7 +587,7 @@ int MQTTPacket_send_puback(int msgid, networkHandles* net, const char* clientID)
  * Free allocated storage for a suback packet.
  * @param pack pointer to the suback packet structure
  */
-void MQTTPacket_freeSuback(Suback* pack)
+void MQTTPacket_freeSuback(Suback* pack)	//-信息使用过了之后就释放掉
 {
 	FUNC_ENTRY;
 	if (pack->qoss != NULL)

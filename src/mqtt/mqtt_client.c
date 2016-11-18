@@ -180,7 +180,7 @@ int mqtt_subscribe(mqtt_client *m, char *topic, int Qos)
  *
  * @return 0 if success, else return error code
  */
-int mqtt_unsubscribe(mqtt_client *m, char *topic)
+int mqtt_unsubscribe(mqtt_client *m, char *topic)	//-客户端取消订阅
 {
 	if (!m) return -1;
 	return MQTTClient_unsubscribe	(m->client, topic);

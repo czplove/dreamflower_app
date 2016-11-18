@@ -680,11 +680,11 @@ void MQTTClient_closeSession(Clients* client)	//-¹Ø±Õ»á»°
 {
 	FUNC_ENTRY;
 	client->good = 0;
-	client->ping_outstanding = 0;
+	client->ping_outstanding = 0;	//-¶Ô»á»°½øĞĞ¹Ø±Õ,ÕâÀï¾ÍĞèÒª°Ñ±êÊ¶Î»»Ö¸´µ½³õÊ¼Öµ
 	if (client->net.socket > 0)
-	{
+	{//-Èç¹û¿Í»§¶ËÓĞÌ×½Ó×ÖµÄ´æÔÚµÄ»°,¾ÍĞèÒª¶Ï¿ª
 		if (client->connected)
-			MQTTPacket_send_disconnect(&client->net, client->clientID);
+			MQTTPacket_send_disconnect(&client->net, client->clientID);	//-Ò»¸ö¿Í»§¶Ë»á¿ÉÄÜ½¨Á¢¼¸¸öÌ×½Ó×Ö,ºÍ·şÎñÆ÷Á¬½Ó
 		Thread_lock_mutex(socket_mutex);
 #if defined(OPENSSL)
 		SSLSocket_close(&client->net);
@@ -699,7 +699,7 @@ void MQTTClient_closeSession(Clients* client)	//-¹Ø±Õ»á»°
 	client->connected = 0;
 	client->connect_state = 0;
 
-	if (client->cleansession)
+	if (client->cleansession)	//-Èç¹û¿Í»§¶ËÁ¬½ÓÊ±Ê¹ÓÃÁËclean session±êÖ¾£¬ÄÇÃ´Õâ¸ö¿Í»§¶ËÖ®Ç°ËùÎ¬»¤µÄĞÅÏ¢½«»á±»¶ªÆú¡£
 		MQTTClient_cleanSession(client);
 	FUNC_EXIT;
 }
@@ -1134,7 +1134,7 @@ int MQTTClient_disconnect1(MQTTClient handle, int timeout, int internal, int sto
 		rc = MQTTCLIENT_FAILURE;
 		goto exit;
 	}
-	if (m->c->connected == 0 && m->c->connect_state == 0)
+	if (m->c->connected == 0 && m->c->connect_state == 0)	//-Ò»¸ö¸ö¸ù¾İ¿Í»§¶ËµÄ±êÖ¾½øĞĞÅĞ¶Ï
 	{
 		rc = MQTTCLIENT_DISCONNECTED;
 		goto exit;
@@ -1146,7 +1146,7 @@ int MQTTClient_disconnect1(MQTTClient handle, int timeout, int internal, int sto
 		m->c->connect_state = -2; /* indicate disconnecting */
 		while (m->c->inboundMsgs->count > 0 || m->c->outboundMsgs->count > 0)
 		{ /* wait for all inflight message flows to finish, up to timeout */
-			if (MQTTClient_elapsed(start) >= timeout)
+			if (MQTTClient_elapsed(start) >= timeout)	//-ÔÚÒ»¶ÎÊ±¼äÄÚ±£Ö¤¶«Î÷·¢ËÍ³öÈ¥
 				break;
 			Thread_unlock_mutex(mqttclient_mutex);
 			MQTTClient_yield();
@@ -1214,7 +1214,7 @@ int MQTTClient_isConnected(MQTTClient handle)	//-Á¬½ÓÇëÇó£º¿Í»§¶ËÇëÇóÁ¬½Óµ½·şÎñÆ
 int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, int* qos)	//-Ò»´ÎĞÔ¶©ÔÄ¼¸¸öÖ÷Ìâ
 {
 	MQTTClients* m = handle;
-	List* topics = ListInitialize();
+	List* topics = ListInitialize();	//-½¨Á¢ÁËÒ»¸öÁ´±í,¿ÉÒÔÏòÀïÃæÔö¼Ó³ÉÔ±ÁË
 	List* qoss = ListInitialize();
 	int i = 0;
 	int rc = MQTTCLIENT_FAILURE;
@@ -1228,12 +1228,12 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 		rc = MQTTCLIENT_FAILURE;
 		goto exit;
 	}
-	if (m->c->connected == 0)
+	if (m->c->connected == 0)	//-±íÊ¾¿Í»§¶ËÃ»ÓĞÁ¬½Ó,ËùÒÔºóÃæ¸ù±¾¾Í²»ĞèÒª·¢ËÍ¶©ÔÄ
 	{
 		rc = MQTTCLIENT_DISCONNECTED;
 		goto exit;
 	}
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++)	//-Õë¶Ô´ı¶©ÔÄµÄÖ÷Ìâ½øĞĞ¼ì²é,¿´¿´ÓĞÃ»ÓĞ³ö´íµÄ
 	{
 		if (!UTF8_validateString(topic[i]))
 		{
@@ -1253,14 +1253,14 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 		goto exit;
 	}
 
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++)	//-°ÑĞèÒªµÄÄÚÈİÔö¼Óµ½Á´±íÖĞ½øĞĞ´æ´¢
 	{
 		ListAppend(topics, topic[i], strlen(topic[i]));
 		ListAppend(qoss, &qos[i], sizeof(int));
 	}
 
-	rc = MQTTProtocol_subscribe(m->c, topics, qoss, msgid);
-	ListFreeNoContent(topics);
+	rc = MQTTProtocol_subscribe(m->c, topics, qoss, msgid);	//-½øÈë·¢ËÍ³ö¶©ÔÄ±¨ÎÄ
+	ListFreeNoContent(topics);	//-¶Ô½¨Á¢µÄÁ´±íÊ¹ÓÃÍêÁË,Õû¸ö¶¼ÊÍ·ÅÁË
 	ListFreeNoContent(qoss);
 
 	if (rc == TCPSOCKET_COMPLETE)
@@ -1268,19 +1268,19 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 		MQTTPacket* pack = NULL;
 
 		Thread_unlock_mutex(mqttclient_mutex);
-		pack = MQTTClient_waitfor(handle, SUBACK, &rc, 10000L);
+		pack = MQTTClient_waitfor(handle, SUBACK, &rc, 10000L);	//-Ç°Ãæ·¢ËÍÁË¶©ÔÄÇëÇó,ÕâÀï¾Í×èÈûµÈ´ıÓ¦´ğ±¨ÎÄ
 		Thread_lock_mutex(mqttclient_mutex);
 		if (pack != NULL)
 		{
 			Suback* sub = (Suback*)pack;	
 			ListElement* current = NULL;
 			i = 0;
-			while (ListNextElement(sub->qoss, &current))
-			{
+			while (ListNextElement(sub->qoss, &current))	//-ÔÚÁ´±íÖĞ²éÕÒÔªËØ
+			{//-ÓÉ·¢²¼Õß¸ºÔğ¾ö¶¨ÏûÏ¢¿É±»´«µİµÄ×î´óQoS¼¶±ğ£¬µ«¶©ÔÄÕßÄÜ¹»½µµÍQoSµÄ¼¶±ğµ½Ò»¸ö¸üÊÊºÏËüÊ¹ÓÃµÄQoS¼¶±ğ¡£
 				int* reqqos = (int*)(current->content);
 				qos[i++] = *reqqos;
 			}	
-			rc = MQTTProtocol_handleSubacks(pack, m->c->net.socket);
+			rc = MQTTProtocol_handleSubacks(pack, m->c->net.socket);	//-ÉÏÃæµÈµ½ÁËĞèÒªµÄÏûÏ¢,ÕâÀï¾ÍÊÇĞèÒªµÄ´¦Àí
 			m->pack = NULL;
 		}
 		else
@@ -1290,7 +1290,7 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 	if (rc == SOCKET_ERROR)
 	{
 		Thread_unlock_mutex(mqttclient_mutex);
-		MQTTClient_disconnect_internal(handle, 0);
+		MQTTClient_disconnect_internal(handle, 0);	//-Ò»¸ö¶«Î÷ÉÏ³öÏÖÁË´íÎó,ÄÇÃ´¾ÍĞèÒªÖ÷¶¯¶Ï¿ªÁ¬½Ó
 		Thread_lock_mutex(mqttclient_mutex);
 	}
 	else if (rc == TCPSOCKET_COMPLETE)
@@ -1351,10 +1351,10 @@ int MQTTClient_unsubscribeMany(MQTTClient handle, int count, char* const* topic)
 		rc = MQTTCLIENT_MAX_MESSAGES_INFLIGHT;
 		goto exit;
 	}
-
+	//-ÉÏÃæµÄ´úÂë¶¼ÊÇÖØ¸´µÄ,Ã»ÓĞÊ²Ã´ĞÂÒâ
 	for (i = 0; i < count; i++)
 		ListAppend(topics, topic[i], strlen(topic[i]));
-	rc = MQTTProtocol_unsubscribe(m->c, topics, msgid);
+	rc = MQTTProtocol_unsubscribe(m->c, topics, msgid);	//-Ã»ÓĞÊ²Ã´ÄÑµÄ,Èç¹û»áÁËÆäÊµ¶¼ÊÇÕâĞ©ÖØ¸´ĞÔµÄ¶«Î÷,¶øÇÒÈç¹û³ÌĞòĞ´µÄºÃµÄ»°,¸üÊÇ
 	ListFreeNoContent(topics);
 
 	if (rc == TCPSOCKET_COMPLETE)
@@ -1362,7 +1362,7 @@ int MQTTClient_unsubscribeMany(MQTTClient handle, int count, char* const* topic)
 		MQTTPacket* pack = NULL;
 
 		Thread_unlock_mutex(mqttclient_mutex);
-		pack = MQTTClient_waitfor(handle, UNSUBACK, &rc, 10000L);
+		pack = MQTTClient_waitfor(handle, UNSUBACK, &rc, 10000L);	//-Õâ¸ö²ã´ÎÏÈ·ÅÒ»·Å,ºóÃæÉî¾¿
 		Thread_lock_mutex(mqttclient_mutex);
 		if (pack != NULL)
 		{
@@ -1595,7 +1595,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 
 			/* Note that these handle... functions free the packet structure that they are dealing with */
 			if (pack->header.bits.type == PUBLISH)	//-Õâ¸öÇø¶Î´ú±íÏûÏ¢ÀàĞÍµÄÒâË¼,ÏÖÔÚ×Ü¹²¶¨ÒåÁË14ÖÖ,,·¢²¼ÏûÏ¢
-				*rc = MQTTProtocol_handlePublishes(pack, *sock);
+				*rc = MQTTProtocol_handlePublishes(pack, *sock);	//-È·±£·¢²¼±»ÊÕµ½
 			else if (pack->header.bits.type == PUBACK || pack->header.bits.type == PUBCOMP)	//-·¢²¼È·ÈÏ	·¢²¼Íê³É
 			{
 				int msgid;
@@ -1603,7 +1603,7 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 				ack = (pack->header.bits.type == PUBCOMP) ? *(Pubcomp*)pack : *(Puback*)pack;
 				msgid = ack.msgId;
 				*rc = (pack->header.bits.type == PUBCOMP) ?
-						MQTTProtocol_handlePubcomps(pack, *sock) : MQTTProtocol_handlePubacks(pack, *sock);
+						MQTTProtocol_handlePubcomps(pack, *sock) : MQTTProtocol_handlePubacks(pack, *sock);	//-È·±£·¢²¼Íê³É
 				if (m && m->dc)
 				{
 					Log(TRACE_MIN, -1, "Calling deliveryComplete for client %s, msgid %d", m->c->clientID, msgid);
@@ -1779,7 +1779,7 @@ exit:
 }
 
 
-void MQTTClient_yield(void)	//-¿Í»§¶Ë·ÅÆú
+void MQTTClient_yield(void)	//-¿Í»§¶Ë·ÅÆú,ÀïÃæÓĞÖÜÆÚ´¦Àíº¯Êı,¿ÉÒÔÊµÏÖ·¢ËÍºÍ½ÓÊÕ»¹ÓĞ´¦Àí
 {
 	START_TIME_TYPE start = MQTTClient_start_clock();
 	unsigned long elapsed = 0L;
@@ -1789,7 +1789,7 @@ void MQTTClient_yield(void)	//-¿Í»§¶Ë·ÅÆú
 	FUNC_ENTRY;
 	if (running)
 	{
-		MQTTClient_sleep(timeout);
+		MQTTClient_sleep(timeout);	//?ÕıÔÚÔËĞĞµÄ»°,ĞİÃßµÈ´ı½áÊø
 		goto exit;
 	}
 
@@ -1797,16 +1797,16 @@ void MQTTClient_yield(void)	//-¿Í»§¶Ë·ÅÆú
 	do
 	{
 		int sock = -1;
-		MQTTClient_cycle(&sock, (timeout > elapsed) ? timeout - elapsed : 0L, &rc);
+		MQTTClient_cycle(&sock, (timeout > elapsed) ? timeout - elapsed : 0L, &rc);	//-ÕâÀïµÄÖÜÆÚ´¦ÀíÊÇ±£Ö¤Í¨Ñ¶µÄÁ÷½áÊø,¶øÃ»ÓĞÃ»·¢ËÍ³öÈ¥µÄÄÚÈİ
 		if (rc == SOCKET_ERROR && ListFindItem(handles, &sock, clientSockCompare))
 		{
 			MQTTClients* m = (MQTTClient)(handles->current->content);
 			if (m->c->connect_state != -2)
 				MQTTClient_disconnect_internal(m, 0);
 		}
-		elapsed = MQTTClient_elapsed(start);
+		elapsed = MQTTClient_elapsed(start);	//-»ñÈ¡ÁË¾­¹ıµÄÊ±¼ä
 	}
-	while (elapsed < timeout);
+	while (elapsed < timeout);	//-³¬Ê±ÍË³ö
 exit:
 	FUNC_EXIT;
 }

@@ -196,7 +196,7 @@ int MQTTProtocol_handleSubacks(void* pack, int sock)	//-处理一个输入的发布应答帧
  * @param topics list of topics
  * @return completion code
  */
-int MQTTProtocol_unsubscribe(Clients* client, List* topics, int msgID)	//?不发布
+int MQTTProtocol_unsubscribe(Clients* client, List* topics, int msgID)	//-MQTT发出取消订阅帧
 {
 	int rc = 0;
 
