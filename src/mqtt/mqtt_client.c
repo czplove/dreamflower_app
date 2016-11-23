@@ -60,7 +60,7 @@ int mqtt_connect(mqtt_client * m, char *username, char *password)	//-Ê¹ÓÃÕË»§µÇÂ
 	if (!m) return -1;	//-±£Ö¤¿Í»§¶Ë³É¹¦´´½¨ÁË,²ÅÓĞ±ØÒª½øĞĞÁ¬½Ó²Ù×÷
 
 	conn_opts.keepAliveInterval = 20;	//-Õë¶ÔÄ¬ÈÏÑ¡Ïî½øĞĞ²ÎÊıĞŞ¸Ä,ÒÔ±ãÊµÏÖĞèÒªµÄ²Ù×÷
-	conn_opts.cleansession = 1;
+	conn_opts.cleansession = 1;	//-Õû¸öÁ¬½ÓµÄÕâÑùµÄÒ»¸ö±êÖ¾
 
 	rc = MQTTClient_connect(m->client, &conn_opts);	//-°ÑÇ°Ãæ´´½¨µÄ¿Í»§¶ËÁ¬½Óµ½·şÎñÆ÷,Ê¹ÓÃÖ¸¶¨µÄ²ÎÊı
 	return rc;

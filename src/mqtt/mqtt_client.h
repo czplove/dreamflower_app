@@ -115,7 +115,7 @@ struct _mqtt_client {
 	int    received_topic_len;
 
 	MQTTClient_message * received_msg;
-};
+};//-一个程序是可以创建几个客户端的,一个客户端又是可以存在几个连接的,一个连接上是有各种报文的
 
 
 /**

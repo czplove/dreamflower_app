@@ -774,7 +774,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 	int sessionPresent = 0;
 
 	FUNC_ENTRY;
-	if (m->ma && !running)
+	if (m->ma && !running)	//-Ò»¸ö³ÌĞòÖ»ÄÜÔËĞĞÒ»´ÎÏÂÃæµÄÖÜÆÚº¯Êı
 	{
 		Thread_start(MQTTClient_run, handle);	//-ÕâÀï´´½¨ÁËÒ»¸öÍÑÀëÏß³Ì,È»ºó¾ÍÈ¥Ö´ĞĞMQTTClient_runÁË
 		if (MQTTClient_elapsed(start) >= millisecsTimeout)	//-µÃµ½¾­¹ıµÄÊ±³¤
@@ -794,7 +794,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 	if (rc == SOCKET_ERROR)
 		goto exit;
 
-	if (m->c->connect_state == 0)
+	if (m->c->connect_state == 0)	//-µ½ÁËÕâÀïÁ¬½Ó×´Ì¬±ØĞë±äÁË,·ñÔò¾ÍÊÇ´íÎó
 	{
 		rc = SOCKET_ERROR;
 		goto exit;
@@ -803,7 +803,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 	if (m->c->connect_state == 1) /* TCP connect started - wait for completion */
 	{
 		Thread_unlock_mutex(mqttclient_mutex);
-		MQTTClient_waitfor(handle, CONNECT, &rc, millisecsTimeout - MQTTClient_elapsed(start));
+		MQTTClient_waitfor(handle, CONNECT, &rc, millisecsTimeout - MQTTClient_elapsed(start));	//-ÑÓÊ±µÈ´ıCONNECTÖ¡,½«·µ»Ø½á¹û
 		Thread_lock_mutex(mqttclient_mutex);
 		if (rc != 0)
 		{
@@ -850,7 +850,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 		{
 #endif
 			m->c->connect_state = 3; /* TCP connect completed, in which case send the MQTT connect packet */
-			if (MQTTPacket_send_connect(m->c, MQTTVersion) == SOCKET_ERROR)
+			if (MQTTPacket_send_connect(m->c, MQTTVersion) == SOCKET_ERROR)	//-½øĞĞMQTTĞ­Òé²ãµÄÁ¬½Ó
 			{
 				rc = SOCKET_ERROR;
 				goto exit;
@@ -896,8 +896,8 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 			Connack* connack = (Connack*)pack;
 			Log(TRACE_PROTOCOL, 1, NULL, m->c->net.socket, m->c->clientID, connack->rc);
 			if ((rc = connack->rc) == MQTTCLIENT_SUCCESS)
-			{
-				m->c->connected = 1;
+			{//-µ½ÕâÀïËµÃ÷MQTTĞ­Òé²ãµÄÁ¬½ÓÒÑ¾­³É¹¦ÁË
+				m->c->connected = 1;	//-MQTT³É¹¦µÄ½øĞĞÁËÁ¬½Ó
 				m->c->good = 1;
 				m->c->connect_state = 0;	//?ÊÕµ½Ó¦´ğÖ®ºó±äÎª0
 				if (MQTTVersion == 4)
@@ -926,7 +926,7 @@ exit:
 	if (rc == MQTTCLIENT_SUCCESS)
 	{
 		if (options->struct_version == 4) /* means we have to fill out return values */
-		{			
+		{//-Èç¹ûÂú×ãÁËÒ»ÇĞÒªÇóÁË,¾ÍÔÙĞ´ÈëÏÂÃæÄÚÈİ			
 			options->returned.serverURI = serverURI;
 			options->returned.MQTTVersion = MQTTVersion;    
 			options->returned.sessionPresent = sessionPresent;
@@ -944,7 +944,7 @@ exit:
 
 //-Õâ¸öÊÇÒ»¸öÇáÁ¿¼¶µÄĞ­Òé,µ«ÊÇÈË¼ÒĞ´µÄºÜÄ£¿é»¯,ËùÒÔ¸Õ¿ªÊ¼µÄÊ±ºòÈİÒ×ÈÆÔÎ,µ«ÊÇÒ»µ©¿´ºÃÖ®ºó,Èç¹ûĞèÒªĞŞ¸ÄµÄ
 //-»°½«ÏÔµÃ±È½Ï·½±ã,Èç¹ûÊÇÒÆÖ²ĞÔµÄ´ó¶¯×÷¾Í¸üÓĞÓÅÊÆÁË,ËùÒÔĞèÒªÑ§Ï°,µ«ÊÇÒªÕÆÎÕ·½·¨,·ñÔòºÜÄÑ
-int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options, const char* serverURI)
+int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options, const char* serverURI)	//-Ò»¸ö¿Í»§¶ËÕë¶ÔÒ»¸öÍøÖ·½øĞĞÁ¬½Ó,Ê¹ÓÃ¸ø¶¨µÄ²ÎÊı
 {
 	MQTTClients* m = handle;	//-ÕâÀïÊÇÖµµÃË¼¿¼µÄ,ÕâÑù×öµÄÄ¿µÄ
 	START_TIME_TYPE start;
@@ -955,7 +955,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	FUNC_ENTRY;
 	millisecsTimeout = options->connectTimeout * 1000;
 	start = MQTTClient_start_clock();	//-¶ÔÏµÍ³º¯Êı½øĞĞÁË·â×°,ÆäÊµ²»·â×°Ò²ĞĞ,µ«ÊÇÕâÑù²Ù×÷ºó¾Í·Ö²ãÁË
-
+	//-¶ÔÖ¸¶¨µÄÒ»¸ö¿Í»§¶Ë½øĞĞ¸³Öµ,¶Ô´«µİ½øÀ´µÄ²ÎÊıºÍ¿Í»§¶Ë°ó¶¨
 	m->c->keepAliveInterval = options->keepAliveInterval;	//-°ÑÑ¡Ïî²ÎÊıÌîĞ´µ½½á¹¹ÌåÖĞ,ÆäÊµ¾ÍÊÇÒ»¸ö¸ñÊ½µÄ×ª»¯,Ò²ÊÇÌá¹©ÁË·Ö²ã
 	m->c->cleansession = options->cleansession;
 	m->c->maxInflightMessages = (options->reliable) ? 1 : 10;
@@ -969,7 +969,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	}
 
 	if (options->will && options->will->struct_version == 0)	//?´óÁ¿µÄĞÅÏ¢²»ÄÜÀí½âÒâË¼ºÍÓÃÍ¾
-	{
+	{//-¿ªÊ¼ÌîĞ´Êı¾İ
 		m->c->will = malloc(sizeof(willMessages));
 		m->c->will->msg = MQTTStrdup(options->will->message);
 		m->c->will->qos = options->will->qos;
@@ -1021,7 +1021,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	else
 		MQTTVersion = MQTTVERSION_DEFAULT;
 
-	if (MQTTVersion == MQTTVERSION_DEFAULT)
+	if (MQTTVersion == MQTTVERSION_DEFAULT)	//-²»Í¬µÄĞ­ÒéÕ»°æ±¾Á¬½ÓÊÇÓĞ²îÒìµÄ
 	{
 		if ((rc = MQTTClient_connectURIVersion(handle, options, serverURI, 4, start, millisecsTimeout)) != MQTTCLIENT_SUCCESS)
 			rc = MQTTClient_connectURIVersion(handle, options, serverURI, 3, start, millisecsTimeout);
@@ -1033,7 +1033,7 @@ int MQTTClient_connectURI(MQTTClient handle, MQTTClient_connectOptions* options,
 	return rc;
 }
 
-
+//-ÕâÀïµÄ²ÎÊı´«µİ¿ÉÒÔÑ§Ï°ÏÂ,Ã»ÓĞÖ¸¶¨ÀàĞÍ,¶øÊÇÓÉÄÚ²¿ÁÙÊ±±äÁ¿Ö¸¶¨µÄ
 int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)	//-Á¬½ÓÇëÇó£º¿Í»§¶ËÇëÇóÁ¬½Óµ½·şÎñÆ÷£»
 {
 	MQTTClients* m = handle;
@@ -1057,13 +1057,13 @@ int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)	//
 	}
 
 	if (options->will) /* check validity of will options structure */
-	{
+	{//-µ±·şÎñÆ÷Óë¿Í»§¶ËÍ¨ĞÅÊ±Óöµ½I/O´íÎó»ò¿Í»§¶ËÃ»ÓĞÔÚKeep AliveÆÚÄÚ½øĞĞÍ¨Ñ¶Ê±£¬Server»á´ú±í¿Í»§¶Ë·¢²¼Ò»¸öWillÏûÏ¢¡£
 		if (strncmp(options->will->struct_id, "MQTW", 4) != 0 || options->will->struct_version != 0)
 		{
 			rc = MQTTCLIENT_BAD_STRUCTURE;
 			goto exit;
 		}
-	}
+	}//-ÓÃÓÚ¼à¿Ø¿Í»§¶ËÓë·şÎñÆ÷Ö®¼äµÄÁ¬½Ó×´¿ö,Õâ¸öĞèÒªÔÚÁ¬½ÓµÄÊ±ºòËµÃ÷,²¢²»ÊÇËùÓĞµÄ¶¼ĞèÒªµÄ
 	
 #if defined(OPENSSL)
 	if (options->struct_version != 0 && options->ssl) /* check validity of SSL options structure */
@@ -1082,18 +1082,18 @@ int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)	//
 		rc = MQTTCLIENT_BAD_UTF8_STRING;
 		goto exit;
 	}
-
+	//-ÏÂÃæ¸ù¾İĞ­ÒéÕ»°æ±¾ºÅÅĞ¶ÏÊ¹ÓÃ³ÌĞò
 	if (options->struct_version < 2 || options->serverURIcount == 0)
 		rc = MQTTClient_connectURI(handle, options, m->serverURI);	//-Ç°Ãæ¾ÍÒ»ÏµÁĞµÄ²ÎÊı½øĞĞÁËĞ£Ñé,Èç¹ûĞ£ÑéÍ¨¹ı,ÕâÀï½øÈëÁ´½Ó
 	else
 	{
 		int i;
 		
-		for (i = 0; i < options->serverURIcount; ++i)
+		for (i = 0; i < options->serverURIcount; ++i)	//-ÅĞ¶ÏÓĞ¼¸¸ö·şÎñÆ÷µØÖ·µÈ´ıÁ¬½Ó,È»ºóÒ»¸öÒ»¸öÁ¬
 		{
 			char* serverURI = options->serverURIs[i];
 			
-			if (strncmp(URI_TCP, serverURI, strlen(URI_TCP)) == 0)
+			if (strncmp(URI_TCP, serverURI, strlen(URI_TCP)) == 0)	//-È¥µô²»ĞèÒªµÄÍ·
 				serverURI += strlen(URI_TCP);
 #if defined(OPENSSL)
 			else if (strncmp(URI_SSL, serverURI, strlen(URI_SSL)) == 0)
@@ -1102,14 +1102,14 @@ int MQTTClient_connect(MQTTClient handle, MQTTClient_connectOptions* options)	//
 				m->ssl = 1;
 			}
 #endif
-			if ((rc = MQTTClient_connectURI(handle, options, serverURI)) == MQTTCLIENT_SUCCESS)
+			if ((rc = MQTTClient_connectURI(handle, options, serverURI)) == MQTTCLIENT_SUCCESS)	//-Á¬½Ó·şÎñÆ÷(Í¨¹ıÍøÖ·)
 				break;
 		}	
 	}
 
 exit:
 	if (m->c->will)
-	{
+	{//-¸Ğ¾õÕâ¸öÊÇ¸æËß·şÎñÆ÷µÄ,¸æËßºÃÁË±¾µØ¾ÍÃ»ÓĞ±ØÒª±£ÁôÁË,ËùÒÔÊÍ·Å¿Õ¼ä
 		free(m->c->will);
 		m->c->will = NULL;
 	}
@@ -1156,7 +1156,7 @@ int MQTTClient_disconnect1(MQTTClient handle, int timeout, int internal, int sto
 
 	MQTTClient_closeSession(m->c);
 
-	while (Thread_check_sem(m->connect_sem))
+	while (Thread_check_sem(m->connect_sem))	//-ÑÓ³Ù×ã¹»µÄÊ±¼ä,ÈÃ±ğµÄ³ÌĞò´¦Àí
 		Thread_wait_sem(m->connect_sem, 100);
 	while (Thread_check_sem(m->connack_sem))
 		Thread_wait_sem(m->connack_sem, 100);
@@ -1262,7 +1262,7 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 	rc = MQTTProtocol_subscribe(m->c, topics, qoss, msgid);	//-½øÈë·¢ËÍ³ö¶©ÔÄ±¨ÎÄ
 	ListFreeNoContent(topics);	//-¶Ô½¨Á¢µÄÁ´±íÊ¹ÓÃÍêÁË,Õû¸ö¶¼ÊÍ·ÅÁË
 	ListFreeNoContent(qoss);
-
+	//-ÉÏÃæ²»Ò»¶¨¶¼·¢ËÍ³öÈ¥ÁË,ËùÒÔÏÂÃæÒ²²»ÊÇÎ¨Ò»´¦ÀíµÄµØ·½
 	if (rc == TCPSOCKET_COMPLETE)
 	{
 		MQTTPacket* pack = NULL;
@@ -1271,7 +1271,7 @@ int MQTTClient_subscribeMany(MQTTClient handle, int count, char* const* topic, i
 		pack = MQTTClient_waitfor(handle, SUBACK, &rc, 10000L);	//-Ç°Ãæ·¢ËÍÁË¶©ÔÄÇëÇó,ÕâÀï¾Í×èÈûµÈ´ıÓ¦´ğ±¨ÎÄ
 		Thread_lock_mutex(mqttclient_mutex);
 		if (pack != NULL)
-		{
+		{//-²»µÈËµÃ÷ÎÒÃÇĞèÒªµÄ¶«Î÷ÒÑ¾­µÈ´ıµ½ÁË,¿ÉÒÔ½øĞĞÏÂÒ»²½´¦ÀíÁË
 			Suback* sub = (Suback*)pack;	
 			ListElement* current = NULL;
 			i = 0;
@@ -1628,8 +1628,8 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 	return pack;
 }
 
-
-MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long timeout)	//-¿Í»§¶ËµÈ´ıÊ²Ã´
+//-·µ»ØµÄÊÇ²»ÊÇÎÒÃÇµÈ´ıµÄ¶«Î÷½«ÓĞ·´À¡
+MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long timeout)	//-¿Í»§¶ËµÈ´ıÖ±µ½Ê±¼äµ½ÁË,Õı³£Çé¿öÏÂÃ»ÓĞÈÎºÎÊµ¼Ê´¦Àí
 {
 	MQTTPacket* pack = NULL;
 	MQTTClients* m = handle;
@@ -1643,7 +1643,7 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 	}
 
 	if (running)
-	{
+	{//-ËµÃ÷ÖÜÆÚ´¦ÀíÏß³ÌÕıÔÚ´¦ÀíÖĞ
 		if (packet_type == CONNECT)	//-µÈ´ıµÄÀàĞÍ
 		{
 			if ((*rc = Thread_wait_sem(m->connect_sem, timeout)) == 0)
@@ -1651,10 +1651,10 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 		}
 		else if (packet_type == CONNACK)
 			*rc = Thread_wait_sem(m->connack_sem, timeout);	//-µÈ´ıÒ»¸öĞÅºÅÁ¿µÄ·¢ËÍ,»òÕß³¬Ê±
-		else if (packet_type == SUBACK)
-			*rc = Thread_wait_sem(m->suback_sem, timeout);
+		else if (packet_type == SUBACK)	//-µÈ´ı½ÓÊÕµ½µÄ±¨ÎÄÀàĞÍ
+			*rc = Thread_wait_sem(m->suback_sem, timeout);	//-µÈ´ıĞÅºÅÁ¿,Èç¹ûµÈ²»µ½³¬Ê±ÍË³ö
 		else if (packet_type == UNSUBACK)
-			*rc = Thread_wait_sem(m->unsuback_sem, timeout);
+			*rc = Thread_wait_sem(m->unsuback_sem, timeout);	//-ÀïÃæÃ»ÓĞ×öÈÎºÎÊµÖÊĞÔµÄ¶«Î÷¾ÍÊÇÑÓÊ±µÈ´ı
 		if (*rc == 0 && packet_type != CONNECT && m->pack == NULL)
 			Log(LOG_ERROR, -1, "waitfor unexpectedly is NULL for client %s, packet_type %d, timeout %ld", m->c->clientID, packet_type, timeout);
 		pack = m->pack;

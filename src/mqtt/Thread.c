@@ -251,13 +251,16 @@ sem_type Thread_create_sem()
 }
 
 
+/*
+对于信号量这里好像是用于延时用的,进入了一个阶段设置一个延时后才可以处理其他的东西,不能立即运行
+*/
 /**
  * Wait for a semaphore to be posted, or timeout.
  * @param sem the semaphore
  * @param timeout the maximum time to wait, in milliseconds
  * @return completion code
  */
-int Thread_wait_sem(sem_type sem, int timeout)	//-等待一个信号量有效或超时
+int Thread_wait_sem(sem_type sem, int timeout)	//-等待一个被增加的信号量,或者超时
 {
 /* sem_timedwait is the obvious call to use, but seemed not to work on the Viper,
  * so I've used trywait in a loop instead. Ian Craggs 23/7/2010
@@ -323,7 +326,7 @@ int Thread_check_sem(sem_type sem)	//-获取信号量的值,但是也有可能同时被改变了
  * @param sem the semaphore
  * @return completion code
  */
-int Thread_post_sem(sem_type sem)
+int Thread_post_sem(sem_type sem)	//-原子操作的原理我应该是清楚的,CPU同一刻只能执行一个指令
 {
 	int rc = 0;
 

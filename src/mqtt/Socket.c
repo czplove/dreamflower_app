@@ -437,7 +437,7 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)	//
  *  @param buflens an array of corresponding buffer lengths
  *  @return completion code, especially TCPSOCKET_INTERRUPTED
  */
-int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** buffers, size_t* buflens, int* frees)
+int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** buffers, size_t* buflens, int* frees)	//-尽量发送出去,但是并不是全部能发送的,没有的写入缓冲区
 {//-尝试写一系列的缓冲区到一个套接字以至于他们被作为一个帧发送出去
 	unsigned long bytes = 0L;
 	iobuf iovecs[5];
