@@ -646,14 +646,14 @@ void MQTTProtocol_retry(time_t now, int doRetry, int regardless)	//-再次重试协议
 	{//-一个客户端一个客户端轮询
 		Clients* client = (Clients*)(current->content);	//-指向客户端的实体
 		ListNextElement(bstate->clients, &current);	//-切换到下一个准备查询
-		if (client->connected == 0)
+		if (client->connected == 0)	//-如果没有连接的话就算了
 			continue;
 		if (client->good == 0)
-		{
+		{//-如果连接了,但是又不是好状态的话,需要主动关闭会话
 			MQTTProtocol_closeSession(client, 1);
 			continue;
 		}
-		if (Socket_noPendingWrites(client->net.socket) == 0)
+		if (Socket_noPendingWrites(client->net.socket) == 0)	//-周期查询是否有处于悬挂队列中的
 			continue;
 		if (doRetry)
 			MQTTProtocol_retries(now, client, regardless);
