@@ -795,7 +795,7 @@ int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字
 			}
 			curpending = s.write_pending->current;
 						
-			if (writecomplete)
+			if (writecomplete)	//-在创建的时候设置了这个回调函数
 				(*writecomplete)(socket);
 		}
 		else

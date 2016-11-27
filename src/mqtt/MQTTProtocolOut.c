@@ -95,7 +95,7 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 
 	addr = MQTTProtocol_addressPort(ip_address, &port);	//-通过字符提取出了自己需要的信息:IP地址+端口号
 	rc = Socket_new(addr, port, &(aClient->net.socket));	//-这个里面实现了底层的创建和连接(硬件链路层)
-	if (rc == EINPROGRESS || rc == EWOULDBLOCK)
+	if (rc == EINPROGRESS || rc == EWOULDBLOCK)	//-上面的连接可能还没有结束,在等待链表内
 		aClient->connect_state = 1; /* TCP connect called - wait for connect completion */	//-通过这个标识位可以知道连接状态
 	else if (rc == 0)
 	{	/* TCP connect completed. If SSL, send SSL connect */
@@ -113,7 +113,7 @@ int MQTTProtocol_connect(const char* ip_address, Clients* aClient, int MQTTVersi
 		}
 #endif
 		//-前面仅仅是实现了"硬件"的连接,下面需要进行MQTT协议的连接.
-		if (rc == 0)
+		if (rc == 0)	//-如果TCP/IP连接完成,下面就立即开始协议层连接了
 		{
 			/* Now send the MQTT connect packet */
 			if ((rc = MQTTPacket_send_connect(aClient, MQTTVersion)) == 0)

@@ -41,6 +41,7 @@ int mqtt_publish_sub(int argc, char ** argv) {
 		printf("mqtt client created\n");
 	}
 	//-上面由于没有套接字的操作,所以即使我没有联网也是可以创建成功的,就是为了以后的操作准备了大量的信息和空间
+	//-就是一次创建的,没有周期函数在里面
 	//connect to server
 	ret = mqtt_connect(m, username, password); //连接服务器,这里不仅仅有硬件连接还有MQTT协议连接
 	if (ret != MQTT_SUCCESS ) {
