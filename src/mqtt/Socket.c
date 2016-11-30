@@ -131,7 +131,7 @@ void Socket_outInitialize()	//-初始化套接字模块
 	s.cur_clientsds = NULL;
 	FD_ZERO(&(s.rset));														/* Initialize the descriptor set */
 	FD_ZERO(&(s.pending_wset));	//-将指定的文件描述符集清空，在对文件描述符集合进行设置前，必须对其进行初始化，如果不清空，由于在系统分配内存空间后，通常并不作清空处理，所以结果是不可知的。
-	s.maxfdp1 = 0;
+	s.maxfdp1 = 0;	//-是指集合中所有文件描述符的范围，即所有文件描述符的最大值加1
 	memcpy((void*)&(s.rset_saved), (void*)&(s.rset), sizeof(s.rset_saved));
 	FUNC_EXIT;
 }
@@ -253,8 +253,13 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 		}
 
 		memcpy((void*)&wset, (void*)&(s.rset_saved), sizeof(wset));
-		if ((rc1 = select(s.maxfdp1, NULL, &(wset), NULL, &zero)) == SOCKET_ERROR)
-		{
+		//-参数1:是一个整数值，是指集合中所有文件描述符的范围，即所有文件描述符的最大值加1
+		//-参数2:（可选）指针，指向一组等待可读性检查的套接口。
+		//-参数3:（可选）指针，指向一组等待可写性检查的套接口.
+		//-参数4:（可选）指针，指向一组等待错误检查的套接口。
+		//-参数5:select()最多等待时间，对阻塞操作则为NULL。
+		if ((rc1 = select(s.maxfdp1, NULL, &(wset), NULL, &zero)) == SOCKET_ERROR)	//-在一个套接字组合中查找需要的子集,然后对他们操作
+		{//-这个select仅仅是一个监视的作用,监视到了,下面就需要实际操作了
 			Socket_error("write select", 0);
 			rc = rc1;
 			goto exit;
