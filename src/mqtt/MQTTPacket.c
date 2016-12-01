@@ -131,7 +131,7 @@ void* MQTTPacket_Factory(networkHandles* net, int* error)	//-读一个来自套接字的M
 		goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
 
 	/* now read the remaining length, so we know how much more to read */
-	if ((*error = MQTTPacket_decode(net, &remaining_length)) != TCPSOCKET_COMPLETE)
+	if ((*error = MQTTPacket_decode(net, &remaining_length)) != TCPSOCKET_COMPLETE)	//-去到最底层读TCP数据
 		goto exit; /* packet not read, *error indicates whether SOCKET_ERROR occurred */
 
 	/* now read the rest, the variable header and payload */
@@ -323,7 +323,7 @@ int MQTTPacket_decode(networkHandles* net, int* value)	//-解码
 #if defined(OPENSSL)
 		rc = (net->ssl) ? SSLSocket_getch(net->ssl, net->socket, &c) : Socket_getch(net->socket, &c);
 #else
-		rc = Socket_getch(net->socket, &c);
+		rc = Socket_getch(net->socket, &c);	//-里面从底层直接读取了数据
 #endif
 		if (rc != TCPSOCKET_COMPLETE)
 				goto exit;

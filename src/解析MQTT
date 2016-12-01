@@ -36,17 +36,31 @@ MQTTClient_yield
 2016/11/30 23:53:25
 
 
+2016/12/1 星期四 下午 5:17:33
+套接字的操作:
+---写
+最底层	writev
+写处理	Socket_continueWrites
+检查		Socket_getReadySocket
+周期调用MQTTClient_cycle
 
+最底层	writev
+Socket_putdatas
+MQTTPacket_sends	/	MQTTPacket_send
+MQTTPacket_send_publish
+//-上面两个地方实现了套接字的写操作,前面一个是周期性的把悬挂缓冲区的内容发送出去,后面一个是主动启动一次发送.
 
+---读
+最底层	recv
+Socket_getch
+MQTTPacket_decode	/	Socket_getdata	
+MQTTPacket_Factory
+MQTTClient_cycle
 
-
-
-
-
-
-
-
-
+最底层	recv
+Socket_close
+MQTTClient_closeSession
+//-读数据主要还是在周期函数里面实现的,有一个关闭的时候应该就是完成剩余的工作,而不是调周期函数
 
 
 

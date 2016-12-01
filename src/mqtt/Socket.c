@@ -239,13 +239,17 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 
 		memcpy((void*)&(s.rset), (void*)&(s.rset_saved), sizeof(s.rset));
 		memcpy((void*)&(pwset), (void*)&(s.pending_wset), sizeof(pwset));
+		//-select能够监视我们需要监视的文件描述符的变化情况——读写或是异常。
 		if ((rc = select(s.maxfdp1, &(s.rset), &pwset, NULL, &timeout)) == SOCKET_ERROR)	//-多路检测可用套接字,确定套接字的状态
-		{//-检查一个集合中的套接字的状态,这个集合由FD_SET设置
+		{//-检查一个集合中的套接字的状态,这个集合由FD_SET设置,可以实现非阻塞方式
 			Socket_error("read select", 0);
 			goto exit;
 		}
-		Log(TRACE_MAX, -1, "Return code %d from read select", rc);
-
+		//-负值：select错误
+		//-正值：某些文件可读写或出错
+		//-0：等待超时，没有可读写或错误的文件
+		Log(TRACE_MAX, -1, "Return code %d from read select", rc);	//-返回状态发生变化的描述符总数
+		//-上面没有实际操作仅仅是对感兴趣的进行检查,如果有必要就进行到这再处理
 		if (Socket_continueWrites(&pwset) == SOCKET_ERROR)	//-周期性的检查悬挂内容,如果有的话就写出去
 		{
 			rc = 0;
@@ -257,7 +261,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 		//-参数2:（可选）指针，指向一组等待可读性检查的套接口。
 		//-参数3:（可选）指针，指向一组等待可写性检查的套接口.
 		//-参数4:（可选）指针，指向一组等待错误检查的套接口。
-		//-参数5:select()最多等待时间，对阻塞操作则为NULL。
+		//-参数5:select()最多等待时间，对阻塞操作则为NULL。若将时间值设为0秒0毫秒，就变成一个纯粹的非阻塞函数
 		if ((rc1 = select(s.maxfdp1, NULL, &(wset), NULL, &zero)) == SOCKET_ERROR)	//-在一个套接字组合中查找需要的子集,然后对他们操作
 		{//-这个select仅仅是一个监视的作用,监视到了,下面就需要实际操作了
 			Socket_error("write select", 0);
@@ -306,7 +310,7 @@ int Socket_getch(int socket, char* c)	//-这里所有的数据都需要对队列的操作,然后再
 	if ((rc = SocketBuffer_getQueuedChar(socket, c)) != SOCKETBUFFER_INTERRUPTED)
 		goto exit;
 
-	if ((rc = recv(socket, c, (size_t)1, 0)) == SOCKET_ERROR)	//-获得套接字数据
+	if ((rc = recv(socket, c, (size_t)1, 0)) == SOCKET_ERROR)	//-获得套接字数据,这个已经是最底层接收了
 	{
 		int err = Socket_error("recv - getch", socket);
 		if (err == EWOULDBLOCK || err == EAGAIN)
@@ -350,6 +354,12 @@ char *Socket_getdata(int socket, int bytes, int* actual_len)	//-从套接字中获得一
 
 	buf = SocketBuffer_getQueuedData(socket, bytes, actual_len);
 	//-下面的函数才是从接收缓冲区复制数据,上面应该是在队列中寻找空间
+	//-recv函数仅仅是copy数据，真正的接收数据是协议来完成的
+	//-recv函数返回其实际copy的字节数
+	//-第一个参数指定接收端套接字描述符；
+	//-第二个参数指明一个缓冲区，该缓冲区用来存放recv函数接收到的数据；
+	//-第三个参数指明buf的长度；
+	//-第四个参数一般置0。
 	if ((rc = recv(socket, buf + (*actual_len), (size_t)(bytes - (*actual_len)), 0)) == SOCKET_ERROR)	//-*得到套接字数据
 	{//-发生错误
 		rc = Socket_error("recv - getdata", socket);
@@ -416,7 +426,7 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)	//
 #else
 	*bytes = 0L;
 	//-readv和writev函数用于在一次函数调用中读、写多个非连续缓冲区。有时也将这两个函数称为散布读（scatter read）和聚集写（gather write）。
-	rc = writev(socket, iovecs, count);	//-这里启动了最终数据的发送
+	rc = writev(socket, iovecs, count);	//-这里启动了最终数据的发送,,返回传输字节数，出错时返回-1.
 	if (rc == SOCKET_ERROR)
 	{
 		int err = Socket_error("writev - putdatas", socket);
@@ -424,7 +434,7 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)	//
 			rc = TCPSOCKET_INTERRUPTED;
 	}
 	else
-		*bytes = rc;
+		*bytes = rc;	//-若成功则返回已读，写的字节数，若出错则返回-1。 
 #endif
 	FUNC_EXIT_RC(rc);
 	return rc;
@@ -712,7 +722,7 @@ void Socket_setWriteCompleteCallback(Socket_writeComplete* mywritecomplete)
  *  @param socket that socket
  *  @return completion code
  */
-int Socket_continueWrite(int socket)	//-针对一个的写
+int Socket_continueWrite(int socket)	//-针对一个的写,但是不一定就写完了,还有可能继续
 {
 	int rc = 0;
 	pending_writes* pw;
@@ -722,7 +732,7 @@ int Socket_continueWrite(int socket)	//-针对一个的写
 	iobuf iovecs1[5];
 
 	FUNC_ENTRY;
-	pw = SocketBuffer_getWrite(socket);
+	pw = SocketBuffer_getWrite(socket);	//-得到这个套接字准备写的内容,以链表的形式动态存储的
 	
 #if defined(OPENSSL)
 	if (pw->ssl)
@@ -732,7 +742,7 @@ int Socket_continueWrite(int socket)	//-针对一个的写
 	} 	
 #endif
 
-	for (i = 0; i < pw->count; ++i)
+	for (i = 0; i < pw->count; ++i)	//-这些细节后面再扣
 	{
 		if (pw->bytes <= curbuflen)
 		{ /* if previously written length is less than the buffer we are currently looking at,
@@ -753,7 +763,7 @@ int Socket_continueWrite(int socket)	//-针对一个的写
 
 	if ((rc = Socket_writev(socket, iovecs1, curbuf+1, &bytes)) != SOCKET_ERROR)
 	{
-		pw->bytes += bytes;
+		pw->bytes += bytes;	//-已经发送出去的字节数
 		if ((rc = (pw->bytes == pw->total)))
 		{  /* topic and payload buffers are freed elsewhere, when all references to them have been removed */
 			for (i = 0; i < pw->count; i++)
@@ -779,7 +789,7 @@ exit:
  *  @param pwset the set of sockets
  *  @return completion code
  */
-int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字
+int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字,这个里面有一种循环机制,把数据连续发送出去
 {
 	int rc1 = 0;
 	ListElement* curpending = s.write_pending->first;
@@ -787,9 +797,9 @@ int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字
 	FUNC_ENTRY;
 	while (curpending)
 	{
-		int socket = *(int*)(curpending->content);
-		if (FD_ISSET(socket, pwset) && Socket_continueWrite(socket))
-		{//-下面判断写失败的原因
+		int socket = *(int*)(curpending->content);	//-取出集合中的一个文件描述符
+		if (FD_ISSET(socket, pwset) && Socket_continueWrite(socket))	//-首先检查集合中指定的文件描述符是否可以读写
+		{//-到这里说明成功了,下面继续,可能还没有写完,需要继续或者换下一个
 			if (!SocketBuffer_writeComplete(socket))
 				Log(LOG_SEVERE, -1, "Failed to remove pending write from socket buffer list");
 			FD_CLR(socket, &(s.pending_wset));
@@ -804,7 +814,7 @@ int Socket_continueWrites(fd_set* pwset)	//-继续一些为决的写套接字
 				(*writecomplete)(socket);
 		}
 		else
-			ListNextElement(s.write_pending, &curpending);
+			ListNextElement(s.write_pending, &curpending);	//-没有那就换下一个元素处理
 	}
 	FUNC_EXIT_RC(rc1);
 	return rc1;
