@@ -209,7 +209,7 @@ int isReady(int socket, fd_set* read_set, fd_set* write_set)	//-ÅÐ¶ÏsocketÊÇ·ñÔÚ
  *  @param tp the timeout to be used for the select, unless overridden
  *  @return the socket next ready, or 0 if none is ready
  */
-int Socket_getReadySocket(int more_work, struct timeval *tp)	//-·µ»ØÏÂÒ»¸öÌ×½Ó×Ö×¼±¸Í¨Ñ¶µÄ±»selectÖ¸Ê¾µÄ
+int Socket_getReadySocket(int more_work, struct timeval *tp)	//-Èç¹ûÓÐµÄ»°·µ»Ø¿ÉÒÔ²Ù×÷µÄÌ×½Ó×ÖÃèÊö·û,Ã¿´ÎÔÚÁ´±íÖÐË³Ðò²éÕÒ
 {
 	int rc = 0;
 	static struct timeval zero = {0L, 0L}; /* 0 seconds */
@@ -227,13 +227,13 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-·µ»ØÏÂÒ»¸öÌ×½Ó×Ö
 
 	while (s.cur_clientsds != NULL)	//-Ö¸Ïòµ±Ç°µÄÌ×½Ó×ÖÃèÊö·û,¼ÇÂ¼µÄÊÇÒ»¸öÁ´±íÔªËØ,Í¨¹ýÕâ¸ö¿ÉÒÔ¶¨Î»µ½Á´±íÖÐµÄÒ»¸öµã,È»ºó¿ÉÒÔÕÒµ½ËùÓÐ
 	{
-		if (isReady(*((int*)(s.cur_clientsds->content)), &(s.rset), &wset))
+		if (isReady(*((int*)(s.cur_clientsds->content)), &(s.rset), &wset))	//-¼ì²éµÄÌ×½Ó×ÖÊÇ×¼±¸ºÃ¿ÉÒÔ²Ù×÷ÁË,ÏÖÔÚ´¦ÓÚ¿ÕÏÐ×´Ì¬
 			break;
 		ListNextElement(s.clientsds, &s.cur_clientsds);
 	}	//-Ñ°ÕÒµ½×¼±¸ºÃµÄÔªËØÏÂÃæ½øÐÐ²Ù×÷
 
 	if (s.cur_clientsds == NULL)
-	{//-Èç¹ûµ±Ç°µÄÌ×½Ó×ÖÃèÊö·û²»´æÔÚ
+	{//-µ½ÕâÀïËµÃ÷Ã»ÓÐÕÒµ½ºÏÊÊµÄÌ×½Ó×Ö,»òÕßÊÇµÚÒ»´Î²éÕÒ
 		int rc1;
 		fd_set pwset;
 
@@ -256,7 +256,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-·µ»ØÏÂÒ»¸öÌ×½Ó×Ö
 			goto exit;
 		}
 
-		memcpy((void*)&wset, (void*)&(s.rset_saved), sizeof(wset));
+		memcpy((void*)&wset, (void*)&(s.rset_saved), sizeof(wset));	//-¼ì²é¶ÁµÄÌ×½Ó×ÖµÄ¿ÉÐ´ÐÔ,
 		//-²ÎÊý1:ÊÇÒ»¸öÕûÊýÖµ£¬ÊÇÖ¸¼¯ºÏÖÐËùÓÐÎÄ¼þÃèÊö·ûµÄ·¶Î§£¬¼´ËùÓÐÎÄ¼þÃèÊö·ûµÄ×î´óÖµ¼Ó1
 		//-²ÎÊý2:£¨¿ÉÑ¡£©Ö¸Õë£¬Ö¸ÏòÒ»×éµÈ´ý¿É¶ÁÐÔ¼ì²éµÄÌ×½Ó¿Ú¡£
 		//-²ÎÊý3:£¨¿ÉÑ¡£©Ö¸Õë£¬Ö¸ÏòÒ»×éµÈ´ý¿ÉÐ´ÐÔ¼ì²éµÄÌ×½Ó¿Ú.
@@ -272,7 +272,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-·µ»ØÏÂÒ»¸öÌ×½Ó×Ö
 
 		if (rc == 0 && rc1 == 0)
 			goto exit; /* no work to do */
-
+		//-µ½ÕâÀïËµÃ÷ÓÐ¿É¶ÁµÄÌ×½Ó×Ö,ÏÂÃæ´ÓÍ·ÕÒµ½µÚÒ»¿É¶ÁµÄ·µ»Ø
 		s.cur_clientsds = s.clientsds->first;
 		while (s.cur_clientsds != NULL)
 		{
@@ -288,7 +288,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-·µ»ØÏÂÒ»¸öÌ×½Ó×Ö
 	else
 	{
 		rc = *((int*)(s.cur_clientsds->content));
-		ListNextElement(s.clientsds, &s.cur_clientsds);
+		ListNextElement(s.clientsds, &s.cur_clientsds);	//-Ç°ÃæÒ»¸ö²ÎÊýÊÇÒ»¸öÁ´±í,ºóÃæÒ»¸ö²ÎÊýÊÇÒ»¸öÔªËØ,ÕâÀïÖ±½ÓÖ¸Ïò½ô½Ó×ÅµÄÏÂÒ»¸öÔªËØ
 	}
 exit:
 	FUNC_EXIT_RC(rc);
@@ -802,7 +802,7 @@ int Socket_continueWrites(fd_set* pwset)	//-¼ÌÐøÒ»Ð©Îª¾öµÄÐ´Ì×½Ó×Ö,Õâ¸öÀïÃæÓÐÒ»Ö
 		{//-µ½ÕâÀïËµÃ÷³É¹¦ÁË,ÏÂÃæ¼ÌÐø,¿ÉÄÜ»¹Ã»ÓÐÐ´Íê,ÐèÒª¼ÌÐø»òÕß»»ÏÂÒ»¸ö
 			if (!SocketBuffer_writeComplete(socket))
 				Log(LOG_SEVERE, -1, "Failed to remove pending write from socket buffer list");
-			FD_CLR(socket, &(s.pending_wset));
+			FD_CLR(socket, &(s.pending_wset));	//-ÒÑ¾­Ð´³öÈ¥ÁË,ËùÒÔ´ÓÐü¹Ò¶ÓÁÐÖÐÈ¥³ý
 			if (!ListRemove(s.write_pending, curpending->content))
 			{
 				Log(LOG_SEVERE, -1, "Failed to remove pending write from list");
