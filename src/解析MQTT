@@ -41,7 +41,7 @@ MQTTClient_yield
 ---写
 最底层	writev
 写处理	Socket_continueWrites
-检查		Socket_getReadySocket
+检查		Socket_getReadySocket		//-这是关键的一步,检查是否需要处理套接字
 周期调用MQTTClient_cycle
 
 最底层	writev
@@ -71,8 +71,12 @@ MQTTClient_closeSession
 2016/11/27 16:55:28
 从现在开始带着问题去解读程序.
 
+2016/12/2 星期五 上午 9:52:44
+s.clientsds
 
 
+整体理解概述:
+套接字是可以建立多个的在一个客户端
 
 
 功能点:
@@ -81,4 +85,4 @@ MQTTClient_closeSession
 
 2.整个套接字的运行机制.
 
-
+3.深入了解链表和队列在协议栈中的使用

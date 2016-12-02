@@ -70,11 +70,12 @@ List* ListInitialize(void)	//-创建了一个链表,链表的操作将在程序中实现
  * @param newel the ListElement to be used in adding the new item
  * @param size the size of the element
  */
-void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size)	//-增加一个已经存在的元素到链表中
+void ListAppendNoMalloc(List* aList, void* content, ListElement* newel, int size)	//-增加一个已经存在的元素到链表中,增加在整个链表的尾部
 { /* for heap use */
 	newel->content = content;	//-void指针只知道,指向变量/对象的起始地址,并不知道后面的长度,所以不能引用,仅仅记录了地址
 	newel->next = NULL;
 	newel->prev = aList->last;	//-指向前面一个链表
+	//-上面是一个双向链表节点的三元素,下面是整个链表的整体描述
 	if (aList->first == NULL)	//-新链表节点优先插在上个链表的前面
 		aList->first = newel;
 	else

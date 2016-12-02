@@ -145,7 +145,7 @@ void Socket_outTerminate()
 	FUNC_ENTRY;
 	ListFree(s.connect_pending);
 	ListFree(s.write_pending);
-	ListFree(s.clientsds);
+	ListFree(s.clientsds);	//-释放链表头指针
 	SocketBuffer_terminate();
 #if defined(WIN32) || defined(WIN64)
 	WSACleanup();
@@ -188,13 +188,13 @@ int Socket_addSocket(int newSd)	//-套接字是一个单位,一个套接字又对应了一个列表
  * @param write_set the socket write set (see select doc)
  * @return boolean - is the socket ready to go?
  */
-int isReady(int socket, fd_set* read_set, fd_set* write_set)	//-判断是否准备好了
+int isReady(int socket, fd_set* read_set, fd_set* write_set)	//-判断socket是否在指定的可操作集合中,,返回1说明准备好写了
 {
 	int rc = 1;
 
 	FUNC_ENTRY;
-	if  (ListFindItem(s.connect_pending, &socket, intcompare) && FD_ISSET(socket, write_set))	//-检测fd在fdset集合中的状态是否变化，当检测到fd状态发生变化时返回真，否则，返回假（也可以认为集合中指定的文件描述符是否可以读写）。
-		ListRemoveItem(s.connect_pending, &socket, intcompare);
+	if  (ListFindItem(s.connect_pending, &socket, intcompare) && FD_ISSET(socket, write_set))	//-判断描述符fd是否在给定的描述符集fdset中，通常配合select函数使用，当检测到fd状态发生变化时返回真，否则，返回假（也可以认为集合中指定的文件描述符是否可以读写）。
+		ListRemoveItem(s.connect_pending, &socket, intcompare);	//-这个套接字上可以写了,说明正在进行了悬挂内容处理结束了,可以从悬挂队列中溢出了
 	else
 		rc = FD_ISSET(socket, read_set) && FD_ISSET(socket, write_set) && Socket_noPendingWrites(socket);
 	FUNC_EXIT_RC(rc);
@@ -230,15 +230,15 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 		if (isReady(*((int*)(s.cur_clientsds->content)), &(s.rset), &wset))
 			break;
 		ListNextElement(s.clientsds, &s.cur_clientsds);
-	}
+	}	//-寻找到准备好的元素下面进行操作
 
 	if (s.cur_clientsds == NULL)
 	{//-如果当前的套接字描述符不存在
 		int rc1;
 		fd_set pwset;
 
-		memcpy((void*)&(s.rset), (void*)&(s.rset_saved), sizeof(s.rset));
-		memcpy((void*)&(pwset), (void*)&(s.pending_wset), sizeof(pwset));
+		memcpy((void*)&(s.rset), (void*)&(s.rset_saved), sizeof(s.rset));	//-保存的读套接字集合
+		memcpy((void*)&(pwset), (void*)&(s.pending_wset), sizeof(pwset));	//-保存的正在写套接字集合
 		//-select能够监视我们需要监视的文件描述符的变化情况——读写或是异常。
 		if ((rc = select(s.maxfdp1, &(s.rset), &pwset, NULL, &timeout)) == SOCKET_ERROR)	//-多路检测可用套接字,确定套接字的状态
 		{//-检查一个集合中的套接字的状态,这个集合由FD_SET设置,可以实现非阻塞方式
@@ -277,7 +277,7 @@ int Socket_getReadySocket(int more_work, struct timeval *tp)	//-返回下一个套接字
 		while (s.cur_clientsds != NULL)
 		{
 			int cursock = *((int*)(s.cur_clientsds->content));
-			if (isReady(cursock, &(s.rset), &wset))
+			if (isReady(cursock, &(s.rset), &wset))	//-返回非0数,说明这个套接字可以操作了,准备好了
 				break;
 			ListNextElement(s.clientsds, &s.cur_clientsds);
 		}
@@ -397,7 +397,7 @@ exit:
 int Socket_noPendingWrites(int socket)	//-在写悬挂链表中检查这个套接字上是否有内容没有发送出去
 {
 	int cursock = socket;
-	return ListFindItem(s.write_pending, &cursock, intcompare) == NULL;
+	return ListFindItem(s.write_pending, &cursock, intcompare) == NULL;	//-如果不存在悬挂的,那么返回1
 }
 
 
@@ -460,7 +460,7 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 	int rc = TCPSOCKET_INTERRUPTED, i, total = buf0len;
 
 	FUNC_ENTRY;
-	if (!Socket_noPendingWrites(socket))	//-在写之前判断下是否有正准备发还没有发的
+	if (!Socket_noPendingWrites(socket))	//-在写之前判断下是否有正准备发还没有发的,返回1说明不存在没有写的
 	{//-如果这个套接字上还有内容发送发送出去,那么就写的话就报错
 		Log(LOG_SEVERE, -1, "Trying to write to socket %d for which there is already pending output", socket);
 		rc = SOCKET_ERROR;

@@ -1548,7 +1548,9 @@ void MQTTClient_retry(void)	//-ÔÙ´Î³¢ÊÔ
 	FUNC_EXIT;
 }
 
-
+//-²ÎÊı1:Ä¿Ç°ËùÓĞÇé¿ö¶¼ÊÇÍâ²¿²»ÓÃ,ÄÚ²¿²éÑ¯ºó¾ö¶¨ÅĞ¶ÏµÄ
+//-²ÎÊı2:ÓĞ³¬Ê±¾ÍÓĞÖµ,Ã»ÓĞ³¬Ê±Éè0
+//-²ÎÊı3:ÊÇÒ»¸ö±êÖ¾Î»Íâ²¿´«ÈëÒ»¸ö,ÄÚ²¿ĞŞ¸Ä¹©Íâ²¿Ê¶±ğ
 MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´¦Àí,ÀïÃæÓĞÊµÏÖ¶ÔÌ×½Ó×ÖµÄ²éÑ¯
 {
 	struct timeval tp = {0L, 0L};
@@ -1563,19 +1565,19 @@ MQTTPacket* MQTTClient_cycle(int* sock, unsigned long timeout, int* rc)	//-ÖÜÆÚ´
 	}
 
 #if defined(OPENSSL)
-	if ((*sock = SSLSocket_getPendingRead()) == -1)
+	if ((*sock = SSLSocket_getPendingRead()) == -1)	//-Ä¿Ç°Ã»ÓĞÊ¹ÓÃOPENSSL¼ÓÃÜÑ¡Ïî,ËùÒÔºóÃæµÄ*sock¿Ï¶¨²»Âú×ãÌõ¼ş
 	{
 		/* 0 from getReadySocket indicates no work to do, -1 == error, but can happen normally */
 #endif
 		Thread_lock_mutex(socket_mutex);
-		*sock = Socket_getReadySocket(0, &tp);	//-ÀïÃæÓĞÖÜÆÚ¼ì²éÓĞÃ»ÓĞÄÚÈİĞ´³ö
+		*sock = Socket_getReadySocket(0, &tp);	//-·µ»Ø×¼±¸¶ÁµÄÌ×½Ó×Ö,ÀïÃæÊ×ÏÈ´¦ÀíÏÂĞ´³öµÄÌ×½Ó×Ö,Õâ¾ÍÊÇËûµÄË¼Â·
 		Thread_unlock_mutex(socket_mutex);
 #if defined(OPENSSL)
 	}
 #endif
 	Thread_lock_mutex(mqttclient_mutex);
 	if (*sock > 0)
-	{//-Èç¹ûÓĞÄÚÈİÁË ¾Í¶ÔÄÚÈİ½øĞĞ´¦Àí
+	{//-Èç¹ûÓĞÌ×½Ó×Ö×¼ºÃ¶ÁÁË,ÏÂÃæ¾Í½øĞĞ¶Á²Ù×÷
 		MQTTClients* m = NULL;
 		if (ListFindItem(handles, sock, clientSockCompare) != NULL)
 			m = (MQTTClient)(handles->current->content);
@@ -1672,7 +1674,7 @@ MQTTPacket* MQTTClient_waitfor(MQTTClient handle, int packet_type, int* rc, long
 				if (*rc == SOCKET_ERROR)
 					break;
 				if (pack && (pack->header.bits.type == packet_type))
-					break;
+					break;	//-µ½ÕâÀïËµÃ÷Ñ°ÕÒµ½ÁË,Âú×ãÌõ¼şÁË¾Í½áÊøµÈ´ı
 				if (m->c->connect_state == 1)
 				{
 					int error;
