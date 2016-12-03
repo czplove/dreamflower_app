@@ -38,7 +38,7 @@ typedef struct
 	unsigned int msgs_received;
 	unsigned int msgs_sent;
 	List pending_writes; /* for qos 0 writes not complete */
-} MQTTProtocol;
+} MQTTProtocol;	//-这个应该是协议层的记录,和纯粹的写悬挂是不同的
 
 
 #include "MQTTProtocolOut.h"

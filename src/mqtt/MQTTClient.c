@@ -1947,11 +1947,11 @@ MQTTClient_nameValue* MQTTClient_getVersionInfo()	//-获得版本号
  * Cleaning up means removing any publication data that was stored because the write did
  * not originally complete.
  */
-void MQTTProtocol_checkPendingWrites()	//-检查挂起的写是否被完成,如果完成了就清除
+void MQTTProtocol_checkPendingWrites()	//-检查挂起的写是否被完成,如果完成了就清除,检查是通过查看悬挂链表里面是否还存在的情况
 {
 	FUNC_ENTRY;
 	if (state.pending_writes.count > 0)
-	{
+	{//-说明有内容正在写,下面就判断结束了没有
 		ListElement* le = state.pending_writes.first;
 		while (le)
 		{

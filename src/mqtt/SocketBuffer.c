@@ -41,7 +41,7 @@
 /**
  * Default input queue buffer
  */
-static socket_queue* def_queue;
+static socket_queue* def_queue;	//-默认的输入队列缓冲区,在这个文件中全局使用
 
 /**
  * List of queued input buffers

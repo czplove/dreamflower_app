@@ -65,7 +65,7 @@ typedef struct NodeStruct
 	void* content;				 /**< pointer to element content */
 	int size;					 /**< size of content */
 	unsigned int red : 1;
-} Node;
+} Node;		//-从这列表元素的定义可以看出这个是一个 二元树
 
 
 /**

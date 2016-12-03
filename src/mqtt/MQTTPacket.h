@@ -198,7 +198,7 @@ typedef struct
 	int msgId;		/**< MQTT message id */
 	char* payload;	/**< binary payload, length delimited */
 	int payloadlen;	/**< payload length */
-} Publish;
+} Publish;	//-定义为了一个完整的发布帧的
 
 
 /**

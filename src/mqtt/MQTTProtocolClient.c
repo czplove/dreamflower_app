@@ -205,14 +205,14 @@ Messages* MQTTProtocol_createMessage(Publish* publish, Messages **mm, int qos, i
  */
 Publications* MQTTProtocol_storePublication(Publish* publish, int* len)	//-¶ÔĞÅÏ¢½øĞĞ´æ´¢,ÒÔ±ã¿ÉÄÜµÄÖØ·¢
 {
-	Publications* p = malloc(sizeof(Publications));
+	Publications* p = malloc(sizeof(Publications));	//-¿ª±ÙÒ»¸ö¿Õ¼ä´æ´¢·¢²¼µÄÏûÏ¢
 
 	FUNC_ENTRY;
 	p->refcount = 1;
 
 	*len = strlen(publish->topic)+1;
 	if (Heap_findItem(publish->topic))
-		p->topic = publish->topic;
+		p->topic = publish->topic;	//-´ÓÒ»¸öÍêÕûµÄ·¢²¼Ö¡ÖĞÌáÈ¡ĞèÒªµÄĞÅÏ¢µ½Ò»¸ö´æ´¢µÄ·¢²¼Ö¡ÖĞ
 	else
 	{
 		p->topic = malloc(*len);
@@ -226,7 +226,7 @@ Publications* MQTTProtocol_storePublication(Publish* publish, int* len)	//-¶ÔĞÅÏ
 	memcpy(p->payload, publish->payload, p->payloadlen);
 	*len += publish->payloadlen;
 
-	ListAppend(&(state.publications), p, *len);
+	ListAppend(&(state.publications), p, *len);	//-ÔÚ´æ´¢¶ÓÁĞÖĞÔö¼ÓÒ»¸ö
 	FUNC_EXIT;
 	return p;
 }

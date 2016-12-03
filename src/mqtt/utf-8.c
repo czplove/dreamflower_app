@@ -140,7 +140,7 @@ const char* UTF8_char_validate(int len, const char* data)	//-¸ù¾İ¸ñÊ½ÅĞ¶ÏÊÇ·ñÊÇÕ
  * @param data the bytes to check for valid UTF-8 characters
  * @return 1 (true) if the string has only UTF-8 characters, 0 (false) otherwise
  */
-int UTF8_validate(int len, const char* data)
+int UTF8_validate(int len, const char* data)	//-Õâ¸ö×÷ÎªÒ»¸öÍêÕûµÄº¯Êı¿éÃ»ÓĞ±ØÒªÈ¥Éî¾¿ÖªµÀ¹¦ÄÜ(·µ»Ø1ËµÃ÷½öÓĞUTF-8×Ö·û,·ñÔò²»ÊÇ)¼´¿É,È»ºóÓĞµØ·½ĞèÒªµÄ¿ÉÒÔÀ´ÒÆÖ²
 {
 	const char* curdata = NULL;
 	int rc = 0;

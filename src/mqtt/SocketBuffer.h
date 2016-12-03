@@ -42,7 +42,7 @@ typedef struct
 	int buflen, 			/**< total length of the buffer */
 		datalen; 			/**< current length of data in buf */
 	char* buf;
-} socket_queue;
+} socket_queue;	//-建立一个结构体用于存储套接字队列信息
 
 typedef struct
 {

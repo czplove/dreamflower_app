@@ -36,16 +36,16 @@
 void TreeInitializeNoMalloc(Tree* aTree, int(*compare)(void*, void*, int))	//-开辟一个节点
 {
 	memset(aTree, '\0', sizeof(Tree));
-	aTree->heap_tracking = 1;
+	aTree->heap_tracking = 1;		//-一个标志位,表示是否有跟踪功能
 	aTree->index[0].compare = compare;
-	aTree->indexes = 1;
+	aTree->indexes = 1;	//-最初的时候索引号为1
 }
 
 /**
  * Allocates and initializes a new tree structure.
  * @return a pointer to the new tree structure
  */
-Tree* TreeInitialize(int(*compare)(void*, void*, int))
+Tree* TreeInitialize(int(*compare)(void*, void*, int))	//-创建和初始化了一个tree结构体元素
 {
 #if defined(UNIT_TESTS)
 	Tree* newt = malloc(sizeof(Tree));
@@ -57,10 +57,10 @@ Tree* TreeInitialize(int(*compare)(void*, void*, int))
 }
 
 
-void TreeAddIndex(Tree* aTree, int(*compare)(void*, void*, int))	//-把开辟的节点增加到一个序列中
+void TreeAddIndex(Tree* aTree, int(*compare)(void*, void*, int))	//-这里是增加索引号,是一个分支,而不是一个简单的成员
 {
 	aTree->index[aTree->indexes].compare = compare;
-	++(aTree->indexes);
+	++(aTree->indexes);	//-增加索引号
 }
 
 
@@ -192,7 +192,7 @@ void TreeBalanceAfterAdd(Tree* aTree, Node* curnode, int index)
 void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 {
 	Node* curparent = NULL;
-	Node* curnode = aTree->index[index].root;
+	Node* curnode = aTree->index[index].root;	//-记录了当前树的根节点
 	Node* newel = NULL;
 	int left = 0;
 	int result = 1;
@@ -203,7 +203,7 @@ void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 		result = aTree->index[index].compare(curnode->content, content, 1);
 		left = (result > 0);
 		if (result == 0)
-			break;
+			break;	//-寻找到相同的退出
 		else
 		{
 			curparent = curnode;
@@ -249,7 +249,7 @@ void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 }
 
 
-void* TreeAdd(Tree* aTree, void* content, int size)
+void* TreeAdd(Tree* aTree, void* content, int size)	//-在tree结构中增加一个成员
 {
 	void* rc = NULL;
 	int i;
@@ -510,7 +510,7 @@ void* TreeRemoveKey(Tree* aTree, void* key)
 }
 
 
-int TreeIntCompare(void* a, void* b, int content)
+int TreeIntCompare(void* a, void* b, int content)	//-比较整数大小 a > b返回-1;a == b返回0;a < b返回1
 {
 	int i = *((int*)a);
 	int j = *((int*)b);
@@ -587,7 +587,7 @@ int test(int limit)
 {
 	int i, *ip, *todelete;
 	Node* current = NULL;
-	Tree* t = TreeInitialize(TreeIntCompare);
+	Tree* t = TreeInitialize(TreeIntCompare);	//-创建了一个tree的结构体成员
 	int rc = 0;
 
 	printf("Tree initialized\n");
