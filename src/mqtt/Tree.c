@@ -82,19 +82,20 @@ void TreeFree(Tree* aTree)	//-释放一个节点
 
 
 
-int isRed(Node* aNode)
+int isRed(Node* aNode)	//-判断是否有,有返回1
 {
 	return (aNode != NULL) && (aNode->red);
 }
 
 
-int isBlack(Node* aNode)
+int isBlack(Node* aNode)	//-判断是否空,空返回1
 {
 	return (aNode == NULL) || (aNode->red == 0);
 }
 
-
-int TreeWalk(Node* curnode, int depth)
+//-先序遍历
+//-首先访问根，再先序遍历左（右）子树，最后先序遍历右（左）子树
+int TreeWalk(Node* curnode, int depth)	//-这是一个很值得去学习的函数,自己调用自己,递归调用
 {
 	if (curnode)
 	{
@@ -116,7 +117,7 @@ int TreeWalk(Node* curnode, int depth)
 
 int TreeMaxDepth(Tree *aTree)
 {
-	int rc = TreeWalk(aTree->index[0].root, 0);
+	int rc = TreeWalk(aTree->index[0].root, 0);	//-把树遍历一遍
 	/*if (aTree->root->red)
 	{
 		printf("root node should not be red %p\n", aTree->root->content);
@@ -206,13 +207,13 @@ void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 			break;	//-寻找到相同的退出
 		else
 		{
-			curparent = curnode;
-			curnode = curnode->child[left];
+			curparent = curnode;	//-父节点
+			curnode = curnode->child[left];	//-字节点
 		}
 	}
 	
 	if (result == 0)
-	{
+	{//-找到了一样的
 		if (aTree->allow_duplicates)
 			exit(-99);
 		{
