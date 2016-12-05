@@ -444,7 +444,7 @@ int stringcompare(void* a, void* b)
 }
 
 
-#if defined(UNIT_TESTS)
+#if defined(UNIT_TESTS)	//-用于测试用的,正常是没有定义的
 
 
 int main(int argc, char *argv[])

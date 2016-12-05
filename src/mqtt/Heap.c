@@ -63,7 +63,7 @@ typedef struct
 	int line;		/**< the line no in the source file where it was allocated */
 	void* ptr;		/**< pointer to the allocated storage */
 	int size;       /**< size of the allocated storage */
-} storageElement;
+} storageElement;	//-在堆中的每个成员用这个结构体记录属性.
 
 static Tree heap;	/**< Tree that holds the allocation records */
 static char* errmsg = "Memory allocation error";
@@ -136,7 +136,7 @@ void Heap_check(char* string, void* ptr)
  * @param size the size of the item to be allocated
  * @return pointer to the allocated item, or NULL if there was an error
  */
-void* mymalloc(char* file, int line, size_t size)
+void* mymalloc(char* file, int line, size_t size)	//-分配一个空白的空间. 用于直接替代malloc函数的.
 {
 	storageElement* s = NULL;
 	int space = sizeof(storageElement);
@@ -144,7 +144,7 @@ void* mymalloc(char* file, int line, size_t size)
 
 	Thread_lock_mutex(heap_mutex);
 	size = Heap_roundup(size);
-	if ((s = malloc(sizeof(storageElement))) == NULL)
+	if ((s = malloc(sizeof(storageElement))) == NULL)	//-从这里应该是可以看出,不是简单的取消malloc函数功能,而是增加了跟踪
 	{
 		Log(LOG_ERROR, 13, errmsg);
 		return NULL;
@@ -157,21 +157,21 @@ void* mymalloc(char* file, int line, size_t size)
 		return NULL;
 	}
 	space += filenamelen;
-	strcpy(s->file, file);
-	s->line = line;
+	strcpy(s->file, file);	//-记录了文件名字,并且用这个指针指到了对应的位置
+	s->line = line;	//-又一次记录了一个属性值
 	/* Add space for eyecatcher at each end */
-	if ((s->ptr = malloc(size + 2*sizeof(int))) == NULL)
+	if ((s->ptr = malloc(size + 2*sizeof(int))) == NULL)	//-实际分配空间还是用malloc函数实现的,这里的分配仅仅是增加了一个属性
 	{
 		Log(LOG_ERROR, 13, errmsg);
 		free(s->file);
 		free(s);
 		return NULL;
 	}
-	space += size + 2*sizeof(int);
+	space += size + 2*sizeof(int);	//-记录了整个空间的大小,包括属性结构
 	*(int*)(s->ptr) = eyecatcher; /* start eyecatcher */
 	*(int*)(((char*)(s->ptr)) + (sizeof(int) + size)) = eyecatcher; /* end eyecatcher */
 	Log(TRACE_MAX, -1, "Allocating %d bytes in heap at file %s line %d ptr %p\n", size, file, line, s->ptr);
-	TreeAdd(&heap, s, space);
+	TreeAdd(&heap, s, space);	//-堆是用一个树结构来记录的,现在在这个结构中增加一个成员.S记录了整个分配空间的属性,space记录了大小
 	state.current_size += size;
 	if (state.current_size > state.max_size)
 		state.max_size = state.current_size;

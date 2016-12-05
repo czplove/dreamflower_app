@@ -20,6 +20,22 @@
  * These trees can hold data of any sort, pointed to by the content pointer of the
  * Node structure.
  * */
+ 
+/*
+二叉排序树，红黑树，这些都是二叉树
+主要为排序和检索的效率。
+举几个应用的方面：
+哈夫曼编解码，搜索二叉树，红黑树(STL中map的基础)
+
+红黑树（Red Black Tree） 是一种自平衡二叉查找树，是在计算机科学中用到的一种数据结构，典型的用途是实现关联数组。
+由于红黑树也是二叉查找树，它们当中每一个节点的比较值都必须大于或等于在它的左子树
+中的所有节点，并且小于或等于在它的右子树中的所有节点。这确保红黑树运作时能够快速
+的在树中查找给定的值。
+红黑树在函数式编程中也特别有用，在这里它们是最常用的持久数据结构之一，它们用来构
+造关联数组和集合，在突变之后它们能保持为以前的版本。除了O(log n)的时间之外，红黑
+树的持久版本对每次插入或删除需要O(log n)的空间。
+左边的数 < 右边的数
+*/ 
 
 #define NO_HEAP_TRACKING 1
 
@@ -50,7 +66,7 @@ Tree* TreeInitialize(int(*compare)(void*, void*, int))	//-创建和初始化了一个tree
 #if defined(UNIT_TESTS)
 	Tree* newt = malloc(sizeof(Tree));
 #else
-	Tree* newt = mymalloc(__FILE__, __LINE__, sizeof(Tree));
+	Tree* newt = mymalloc(__FILE__, __LINE__, sizeof(Tree));	//-__FILE__用以指示本行语句所在源文件的文件名;__LINE__用以指示本行语句在源文件中的位置信息
 #endif
 	TreeInitializeNoMalloc(newt, compare);
 	return newt;
@@ -127,7 +143,7 @@ int TreeMaxDepth(Tree *aTree)
 }
 
 
-void TreeRotate(Tree* aTree, Node* curnode, int direction, int index)
+void TreeRotate(Tree* aTree, Node* curnode, int direction, int index)	//-二叉树旋转平衡的问题
 {
 	Node* other = curnode->child[!direction];
 
@@ -201,7 +217,7 @@ void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 
 	while (curnode)
 	{
-		result = aTree->index[index].compare(curnode->content, content, 1);
+		result = aTree->index[index].compare(curnode->content, content, 1);	//-content目前传递过来的是一个指针值,这个空间里存储的是地址值
 		left = (result > 0);
 		if (result == 0)
 			break;	//-寻找到相同的退出
@@ -256,24 +272,26 @@ void* TreeAdd(Tree* aTree, void* content, int size)	//-在tree结构中增加一个成员
 	int i;
 
 	for (i = 0; i < aTree->indexes; ++i)
-		rc = TreeAddByIndex(aTree, content, size, i);
+		rc = TreeAddByIndex(aTree, content, size, i);	//-这里的目录Index,一个应该代表一个树
 
 	return rc;
 }
 
-
-Node* TreeFindIndex1(Tree* aTree, void* key, int index, int value)
+//-查找应该是这样的原理
+//-用目标值(key),去和第一个节点(root)比较,由于所有的节点都是按照规律排列的,所以
+//-可以很快找到(左边的<右边的)
+Node* TreeFindIndex1(Tree* aTree, void* key, int index, int value)	//-key是寻找的目标
 {
 	int result = 0;
-	Node* curnode = aTree->index[index].root;
+	Node* curnode = aTree->index[index].root;	//-记录的是整个树的信息
 
 	while (curnode)
 	{
 		result = aTree->index[index].compare(curnode->content, key, value);
 		if (result == 0)
-			break;
+			break;	//-相等就找到了
 		else
-			curnode = curnode->child[result > 0];
+			curnode = curnode->child[result > 0];	//-key小于节点值,那么就取节点左边的子节点,否则取右边的
 	}
 	return curnode;
 }
