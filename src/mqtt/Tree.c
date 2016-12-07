@@ -35,6 +35,15 @@
 造关联数组和集合，在突变之后它们能保持为以前的版本。除了O(log n)的时间之外，红黑
 树的持久版本对每次插入或删除需要O(log n)的空间。
 左边的数 < 右边的数
+
+这个就是一个排序方法,然后在存储的时候按照这个规则进行,最终将获得很好的查找效率
+叶子节点都是空节点是为了说明结束的,最终不实际插入,仅仅是一个中间过程
+该树是完美黑色平衡的，即任意空链接到根结点的路径上的黑链接数量相同。
+方法太重要了,一切一定要注意方法,这样才能事半功倍.
+比如旋转仅仅就是两个节点调换位置,哈哈.
+只要左边的就是默认红色链接,然后再判断合理性,然后再调整.
+
+总体来讲就是一个数据结构,目的是快速查找,只是为了实现这样的目的,需要花费精力去维护这个数据结构.
 */ 
 
 #define NO_HEAP_TRACKING 1
@@ -142,22 +151,30 @@ int TreeMaxDepth(Tree *aTree)
 	return rc;
 }
 
-
+//-一个临时变量other指向新增加节点原来的父节点
+//-然后在整个过程中切换各个变量的值,最终完成红黑树的再平衡
+//-这里大量的指针指向,好复杂啊
+//-其中一种情况模型描述:
+//-连续两个红链接,然后把这两个红链接都变为普通链接(其实就是把上面一个节点拉下来)
+//-参数1 描述了整个树
+//-参数2 新插入节点的爷爷节点
+//-参数3 
+//-参数4 系统中一个树描述结构体可能记录了两个独立的树,这个就是编号
 void TreeRotate(Tree* aTree, Node* curnode, int direction, int index)	//-二叉树旋转平衡的问题
 {
-	Node* other = curnode->child[!direction];
+	Node* other = curnode->child[!direction];	//-转化过来说其实就是新增加节点的父节点定位,那么other最终存放的是旋转后的父节点
 
-	curnode->child[!direction] = other->child[direction];
+	curnode->child[!direction] = other->child[direction];	//-完成了父节点上孩节点挂接到爷爷节点上
 	if (other->child[direction] != NULL)
 		other->child[direction]->parent = curnode;
-	other->parent = curnode->parent;
+	other->parent = curnode->parent;	//-爷爷节点的父节点指向了下面旋转的所有节点的父节点.所以说other里面暂存的就是旋转后的父节点
 	if (curnode->parent == NULL)
-		aTree->index[index].root = other;
-	else if (curnode == curnode->parent->child[direction])
+		aTree->index[index].root = other;	//-如果爷爷节点没有父节点,那么旋转后other爷就没有父节点,那么它就是根节点
+	else if (curnode == curnode->parent->child[direction])	//-如果爷爷节点的父节点存在,那么现在需要重新指向了,这个爷爷节点换了
 		curnode->parent->child[direction] = other;
 	else
 		curnode->parent->child[!direction] = other;
-	other->child[direction] = curnode;
+	other->child[direction] = curnode;	//-父节点的孩节点指向了原来的爷爷节点,到这里就完成了所有父节点信息的变换
 	curnode->parent = other;
 }
 
@@ -181,22 +198,22 @@ Node* TreeBAASub(Tree* aTree, Node* curnode, int which, int index)
 		}
 		curnode->parent->red = 0;
 		curnode->parent->parent->red = 1;
-		TreeRotate(aTree, curnode->parent->parent, which, index);
+		TreeRotate(aTree, curnode->parent->parent, which, index);	//-传递过去的是爷爷节点
 	}
 	return curnode;
 }
 
 
-void TreeBalanceAfterAdd(Tree* aTree, Node* curnode, int index)
+void TreeBalanceAfterAdd(Tree* aTree, Node* curnode, int index)	//-现在增加了一个点,需要再判断平衡性
 {
-	while (curnode && isRed(curnode->parent) && curnode->parent->parent)
-	{
-		if (curnode->parent == curnode->parent->parent->child[LEFT])
+	while (curnode && isRed(curnode->parent) && curnode->parent->parent)	//-满足这些条件说明与红黑树定义冲突需要调整
+	{//-不是叶子节点;父节点是红色的;爷节点存在
+		if (curnode->parent == curnode->parent->parent->child[LEFT])	//-通过比较取得叔叔节点即新增加节点的父节点的兄弟节点
 			curnode = TreeBAASub(aTree, curnode, RIGHT, index);
 		else
 			curnode = TreeBAASub(aTree, curnode, LEFT, index);
   }
-  aTree->index[index].root->red = 0;
+  aTree->index[index].root->red = 0;	//-性质2. 根节点是黑色。
 }
 
 
@@ -209,13 +226,13 @@ void TreeBalanceAfterAdd(Tree* aTree, Node* curnode, int index)
 void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 {
 	Node* curparent = NULL;
-	Node* curnode = aTree->index[index].root;	//-记录了当前树的根节点
+	Node* curnode = aTree->index[index].root;	//-记录了当前树的根节点，这里的目的应该是从根节点开始查找
 	Node* newel = NULL;
 	int left = 0;
 	int result = 1;
 	void* rc = NULL;
 
-	while (curnode)
+	while (curnode)	//-找到相同的或遇到第一个空的节点,由于从根节点就是这么排列的,所以都有规则
 	{
 		result = aTree->index[index].compare(curnode->content, content, 1);	//-content目前传递过来的是一个指针值,这个空间里存储的是地址值
 		left = (result > 0);
@@ -233,40 +250,40 @@ void* TreeAddByIndex(Tree* aTree, void* content, int size, int index)
 		if (aTree->allow_duplicates)
 			exit(-99);
 		{
-			newel = curnode;
+			newel = curnode;	//-找到了就代替原来的节点
 			rc = newel->content;
 			if (index == 0)
 				aTree->size += (size - curnode->size);
 		}
 	}
 	else
-	{
+	{//-没有找到相同的节点,那么就增加一个节点
 		#if defined(UNIT_TESTS)
 			newel = malloc(sizeof(Node));
 		#else
-			newel = (aTree->heap_tracking) ? mymalloc(__FILE__, __LINE__, sizeof(Node)) : malloc(sizeof(Node));
+			newel = (aTree->heap_tracking) ? mymalloc(__FILE__, __LINE__, sizeof(Node)) : malloc(sizeof(Node));	//-开辟一个新的节点,如果需要的话可以增加信息进行跟踪
 		#endif
 		memset(newel, '\0', sizeof(Node));
 		if (curparent)
-			curparent->child[left] = newel;
+			curparent->child[left] = newel;	//-把这个节点填入了合适的节点内
 		else
-			aTree->index[index].root = newel;
+			aTree->index[index].root = newel;	//-如果连父节点都没有,那么他自己就是根节点
 		newel->parent = curparent;
 		newel->red = 1;
 		if (index == 0)
 		{
-			++(aTree->count);
+			++(aTree->count);	//-在树里面成功的增加了一个新节点后,在树的描述结构体中就增加一个
 			aTree->size += size;
 		}
 	}
-	newel->content = content;
+	newel->content = content;	//-对确认的点赋值
 	newel->size = size;
-	TreeBalanceAfterAdd(aTree, newel, index);
+	TreeBalanceAfterAdd(aTree, newel, index);	//-也许赋值之后就打破了原来的平衡,所以为了满足红黑树,就再进行平衡
 	return rc;
 }
 
 
-void* TreeAdd(Tree* aTree, void* content, int size)	//-在tree结构中增加一个成员
+void* TreeAdd(Tree* aTree, void* content, int size)	//-在tree结构中增加一个成员，第二个参数其实内容就是一个数值，只是这个数值可以被结构体使用
 {
 	void* rc = NULL;
 	int i;
