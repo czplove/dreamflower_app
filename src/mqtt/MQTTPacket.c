@@ -219,7 +219,7 @@ int MQTTPacket_send(networkHandles* net, Header header, char* buffer, size_t buf
 		time(&(net->lastSent));		//-记录最后一次发送的时间
 	
 	if (rc != TCPSOCKET_INTERRUPTED)
-	  free(buf);
+	  free(buf);	//-发送完成了空间就可以释放了
 
 	FUNC_EXIT_RC(rc);
 	return rc;
@@ -242,12 +242,12 @@ int MQTTPacket_sends(networkHandles* net, Header header, int count, char** buffe
 
 	FUNC_ENTRY;
 	buf = malloc(10);
-	buf[0] = header.byte;
+	buf[0] = header.byte;	//-包含Message Type（消息类型）和Flags（DUP，QoS级别，RETAIN）字段
 	for (i = 0; i < count; i++)
-		total += buflens[i];
-	buf0len = 1 + MQTTPacket_encode(&buf[1], total);
+		total += buflens[i];	//-计算出不同缓冲区内的总字节数
+	buf0len = 1 + MQTTPacket_encode(&buf[1], total);	//-后面把总字节数转化为MQTT帧中剩余长度字段,最终表示的是固定头的长度
 #if !defined(NO_PERSISTENCE)
-	if (header.bits.type == PUBLISH && header.bits.qos != 0)
+	if (header.bits.type == PUBLISH && header.bits.qos != 0)	//-根据固定头中不同帧的类型开始组织数据
 	{   /* persist PUBLISH QoS1 and Qo2 */
 		char *ptraux = buffers[2];
 		int msgId = readInt(&ptraux);

@@ -430,8 +430,8 @@ int Socket_writev(int socket, iobuf* iovecs, int count, unsigned long* bytes)	//
 	if (rc == SOCKET_ERROR)
 	{
 		int err = Socket_error("writev - putdatas", socket);
-		if (err == EWOULDBLOCK || err == EAGAIN)
-			rc = TCPSOCKET_INTERRUPTED;
+		if (err == EWOULDBLOCK || err == EAGAIN)	//-用于非阻塞模式，不需要重新读或者写,只是暂时没有完成
+			rc = TCPSOCKET_INTERRUPTED;	//-表示发生了中断,还没有结束,需要等待
 	}
 	else
 		*bytes = rc;	//-若成功则返回已读，写的字节数，若出错则返回-1。 
@@ -469,11 +469,11 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 
 	for (i = 0; i < count; i++)	//-把几个缓冲区的总长计算出来
 		total += buflens[i];
-
+	//-下面为最终的硬件写,最终组织内容了
 	iovecs[0].iov_base = buf0;
 	iovecs[0].iov_len = buf0len;
 	frees1[0] = 1;
-	for (i = 0; i < count; i++)	//-把所有缓冲区的内容换个地方存储
+	for (i = 0; i < count; i++)	//-把所有缓冲区的内容换个地方存储,这个结构体的形式写函数认
 	{
 		iovecs[i+1].iov_base = buffers[i];
 		iovecs[i+1].iov_len = buflens[i];
@@ -495,8 +495,8 @@ int Socket_putdatas(int socket, char* buf0, size_t buf0len, int count, char** bu
 			SocketBuffer_pendingWrite(socket, count+1, iovecs, frees1, total, bytes);	//-在链表中记录下了这个信息
 #endif
 			*sockmem = socket;
-			ListAppend(s.write_pending, sockmem, sizeof(int));
-			FD_SET(socket, &(s.pending_wset));	//-将fd加入set集合
+			ListAppend(s.write_pending, sockmem, sizeof(int));	//-这个链表和上个链表的用途不同
+			FD_SET(socket, &(s.pending_wset));	//-将fd加入set集合,多了一个监视套接字
 			rc = TCPSOCKET_INTERRUPTED;
 		}
 	}

@@ -258,7 +258,7 @@ PUBRECÏûÏ¢ÊÇÓÃÀ´ÏìÓ¦QoS¼¶±ğÎª2µÄPUBLISHÏûÏ¢µÄ¡£ÕâÊÇQoS¼¶±ğÎª2µÄprotocol flow£¨ Ğ
  * @param sock the socket on which the packet was received
  * @return completion code
  */
-int MQTTProtocol_handlePublishes(void* pack, int sock)
+int MQTTProtocol_handlePublishes(void* pack, int sock)	//-Õâ¸ö¾ÍÊÇ·şÎñÆ÷·¢ËÍ¹ıÀ´µÄÏûÏ¢
 {
 	Publish* publish = (Publish*)pack;
 	Clients* client = NULL;
@@ -266,7 +266,7 @@ int MQTTProtocol_handlePublishes(void* pack, int sock)
 	int rc = TCPSOCKET_COMPLETE;
 
 	FUNC_ENTRY;
-	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);
+	client = (Clients*)(ListFindItem(bstate->clients, &sock, clientSocketCompare)->content);	//-Í¨¹ı±êÖ¾Î»ÔÚÁ´±íÖĞ¼ìË÷³öÄÚÈİ
 	clientid = client->clientID;
 	Log(LOG_PROTOCOL, 11, NULL, sock, clientid, publish->msgId, publish->header.bits.qos,
 					publish->header.bits.retain, min(20, publish->payloadlen), publish->payload);

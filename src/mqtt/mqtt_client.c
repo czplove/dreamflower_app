@@ -212,8 +212,8 @@ int mqtt_delete(mqtt_client *m)
  */
 int mqtt_publish_data(mqtt_client * m, char *topic, void *data, int length, int Qos)
 {
-	MQTTClient_message pubmsg = MQTTClient_message_initializer;
-	MQTTClient_deliveryToken token = -1;
+	MQTTClient_message pubmsg = MQTTClient_message_initializer;	//-记录一条消息的结构体
+	MQTTClient_deliveryToken token = -1;	//-投递 标志,通过这个标志在一个链表中检索
 	int rc;
 
 	if (!m) return -1;	//-有必要进行下面操作的前提就是有这样一个实体
@@ -221,7 +221,7 @@ int mqtt_publish_data(mqtt_client * m, char *topic, void *data, int length, int 
 	pubmsg.payload = data;
 	pubmsg.payloadlen = length;
 	pubmsg.qos = Qos;
-	pubmsg.retained = 0;
+	pubmsg.retained = 0;	//-消息是否保持标志
 	//-上面进行了格式转化
 	rc = MQTTClient_publishMessage(m->client, topic, &pubmsg, &token);
 	if ( rc != MQTTCLIENT_SUCCESS )
@@ -256,7 +256,7 @@ int mqtt_publish(mqtt_client * m, char *topic, char *message, int Qos)	//-这里发
 }
 
 
-static void mqtt_clear_received(mqtt_client *m)
+static void mqtt_clear_received(mqtt_client *m)	//-把客户端的标志位清零什么意思
 {
 	if (!m) return;
 
@@ -290,7 +290,7 @@ static void mqtt_clear_received(mqtt_client *m)
  *
  * @return 0 if message is recieved.
  */
-int mqtt_receive(mqtt_client *m, unsigned long timeout)
+int mqtt_receive(mqtt_client *m, unsigned long timeout)	//-接收特定客户端上的消息
 {
 	int rc;
 
@@ -305,7 +305,7 @@ int mqtt_receive(mqtt_client *m, unsigned long timeout)
 		if ( m->received_msg == NULL) {
 			rc = -1;
 		} else {
-			rc = MQTTCLIENT_SUCCESS;
+			rc = MQTTCLIENT_SUCCESS;	//-从下面看好像一次客户端就记录一个消息
 			if ( m->received_topic[m->received_topic_len] != 0 )
 				m->received_topic[m->received_topic_len] = 0;
 			m->received_message = m->received_msg->payload;

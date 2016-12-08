@@ -54,10 +54,11 @@ int mqtt_subscribe_sub(int argc, char ** argv) {
 	printf("mqtt client subscribe %s,  return code = %d\n", topic, ret);
 
 	signal(SIGINT, stop_running);	//?发送信号量
-	signal(SIGTERM, stop_running);
+	signal(SIGTERM, stop_running);	//-应该是设置处理信号量
 
 	printf("wait for message of topic: %s ...\n", topic);
 
+	//-从下面可以看出接收消息也是通过查询的方式的,不是中断处理
 	//loop: waiting message
 	while (running) {
 		int timeout = 200;

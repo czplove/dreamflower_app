@@ -34,6 +34,37 @@
 	typedef struct iovec iobuf;
 #endif
 
+/*
+I/O vector，与readv和wirtev操作相关的结构体。readv和writev函数用于在一次函数调用
+中读、写多个非连续缓冲区。有时也将这两个函数称为散布读（scatter read）和聚集写（gather write）。
+成员iov_base指向一个缓冲区，这个缓冲区是存放readv所接收的数据或是writev将要发送的数据。
+成员iov_len确定了接收的最大长度以及实际写入的长度。
+read和write的衍生函数，readv和writev可以在一个原子操作中读取或写入多个缓冲区。
+ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+ssize_t writev(int fd, const struct iovec *iov, int iovcnt);
+fd是要在其上进行读或是写的文件描述符；
+iov是读或写所用的I/O向量；
+iovcnt是要使用的向量元素个数。
+
+* 将三个独立的字符串一次写入终端。*
+#include <sys/uio.h>
+int main(int argc,char **argv)
+{
+    char part1[] = "This is iov";
+    char part2[] = " and ";
+    char part3[] = " writev test";
+    struct iovec iov[3];
+    iov[0].iov_base = part1;
+    iov[0].iov_len = strlen(part1);
+    iov[1].iov_base = part2;
+    iov[1].iov_len = strlen(part2);
+    iov[2].iov_base = part3;
+    iov[2].iov_len = strlen(part3);
+    writev(1,iov,3);
+    return 0;
+}
+*/
+
 typedef struct
 {
 	int socket;

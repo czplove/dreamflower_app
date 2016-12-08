@@ -304,7 +304,7 @@ void SocketBuffer_queueChar(int socket, char c)
 #if defined(OPENSSL)
 void SocketBuffer_pendingWrite(int socket, SSL* ssl, int count, iobuf* iovecs, int* frees, int total, int bytes)
 #else
-void SocketBuffer_pendingWrite(int socket, int count, iobuf* iovecs, int* frees, int total, int bytes)
+void SocketBuffer_pendingWrite(int socket, int count, iobuf* iovecs, int* frees, int total, int bytes)	//-把没有成功发送的报文以链表的形式存储起来
 #endif
 {//-套接字写被中断了所以存储剩余的数据
 	int i = 0;

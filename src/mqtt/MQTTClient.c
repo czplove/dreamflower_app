@@ -422,7 +422,7 @@ void MQTTClient_free(void* memory)	//-释放什么
 }
 
 
-int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* topicLen, MQTTClient_message** message)	//-发出消息
+int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* topicLen, MQTTClient_message** message)	//-接收到了消息然后投递消息到需要的地方
 {
 	qEntry* qe = (qEntry*)(m->c->messageQueue->first->content);
 
@@ -431,7 +431,7 @@ int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* top
 	*topicName = qe->topicName;
 	*topicLen = qe->topicLen;
 	if (strlen(*topicName) != *topicLen)
-		rc = MQTTCLIENT_TOPICNAME_TRUNCATED;
+		rc = MQTTCLIENT_TOPICNAME_TRUNCATED;	//-一种错误情况,主题名字不对
 #if !defined(NO_PERSISTENCE)
 	if (m->c->persistence)
 		MQTTPersistence_unpersistQueueEntry(m->c, (MQTTPersistence_qEntry*)qe);
@@ -722,7 +722,7 @@ int MQTTClient_cleanSession(Clients* client)	//-清除会话
 }
 
 
-void Protocol_processPublication(Publish* publish, Clients* client)	//-处理发布
+void Protocol_processPublication(Publish* publish, Clients* client)	//-处理接收到的消息,这个是最大发一次的消息
 {
 	qEntry* qe = NULL;
 	MQTTClient_message* mm = NULL;
@@ -757,7 +757,7 @@ void Protocol_processPublication(Publish* publish, Clients* client)	//-处理发布
 		mm->dup = publish->header.bits.dup;
 	mm->msgid = publish->msgId;
 
-	ListAppend(client->messageQueue, qe, sizeof(qe) + sizeof(mm) + mm->payloadlen + strlen(qe->topicName)+1);
+	ListAppend(client->messageQueue, qe, sizeof(qe) + sizeof(mm) + mm->payloadlen + strlen(qe->topicName)+1);	//-接收到的消息存储在开辟的新空间,但是仍然通过链表记忆结构
 #if !defined(NO_PERSISTENCE)
 	if (client->persistence)
 		MQTTPersistence_persistQueueEntry(client, (MQTTPersistence_qEntry*)qe);
@@ -1398,7 +1398,7 @@ int MQTTClient_unsubscribe(MQTTClient handle, const char* topic)	//-主动取消订阅
 	return rc;
 }
 
-//-发布
+//-发布,到这里的处理已经经过很多校验了
 int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen, void* payload,
 							 int qos, int retained, MQTTClient_deliveryToken* deliveryToken)
 {
@@ -1424,16 +1424,16 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 	/* If outbound queue is full, block until it is not */
 	while (m->c->outboundMsgs->count >= m->c->maxInflightMessages || 
          Socket_noPendingWrites(m->c->net.socket) == 0) /* wait until the socket is free of large packets being written */
-	{
+	{//-进入说明需要阻塞,现在不适合输出
 		if (blocked == 0)
 		{
 			blocked = 1;
 			Log(TRACE_MIN, -1, "Blocking publish on queue full for client %s", m->c->clientID);
 		}
 		Thread_unlock_mutex(mqttclient_mutex);
-		MQTTClient_yield();
+		MQTTClient_yield();	//-阻塞还需要不停的处理收发,万一是单线程的,否则永远不会空闲
 		Thread_lock_mutex(mqttclient_mutex);
-		if (m->c->connected == 0)
+		if (m->c->connected == 0)	//-如果都没有连接,就没有必要在这阻塞了
 		{
 			rc = MQTTCLIENT_FAILURE;
 			goto exit;
@@ -1441,7 +1441,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 	}
 	if (blocked == 1)
 		Log(TRACE_MIN, -1, "Resuming publish now queue not full for client %s", m->c->clientID);
-	if (qos > 0 && (msgid = MQTTProtocol_assignMsgId(m->c)) == 0)
+	if (qos > 0 && (msgid = MQTTProtocol_assignMsgId(m->c)) == 0)	//-如果qos > 0就需要分配一个ID号,在里面找一个空的就行
 	{	/* this should never happen as we've waited for spaces in the queue */
 		rc = MQTTCLIENT_MAX_MESSAGES_INFLIGHT;
 		goto exit;
@@ -1475,7 +1475,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 	if (deliveryToken && qos > 0)
 		*deliveryToken = msg->msgid;
 
-	free(p);
+	free(p);	//-如果是申请的空间就需要释放,但是如果是临时缓冲区就会随着程序的退出自动释放
 
 	if (rc == SOCKET_ERROR)
 	{
@@ -1731,14 +1731,14 @@ int MQTTClient_receive(MQTTClient handle, char** topicName, int* topicLen, MQTTC
 											 unsigned long timeout)
 {
 	int rc = TCPSOCKET_COMPLETE;
-	START_TIME_TYPE start = MQTTClient_start_clock();
+	START_TIME_TYPE start = MQTTClient_start_clock();	//-这些东西编程都没有什么意思了
 	unsigned long elapsed = 0L;
 	MQTTClients* m = handle;
 
 	FUNC_ENTRY;
 	if (m == NULL || m->c == NULL)
 	{
-		rc = MQTTCLIENT_FAILURE;
+		rc = MQTTCLIENT_FAILURE;	//-没有这样的客户端存在,接收必然失败
 		goto exit;
 	}
 	if (m->c->connected == 0)
@@ -1758,7 +1758,7 @@ int MQTTClient_receive(MQTTClient handle, char** topicName, int* topicLen, MQTTC
 	do
 	{
 		int sock = 0;
-		MQTTClient_cycle(&sock, (timeout > elapsed) ? timeout - elapsed : 0L, &rc);
+		MQTTClient_cycle(&sock, (timeout > elapsed) ? timeout - elapsed : 0L, &rc);	//-接收没有什么特殊的就是周期性的读写套接字,然后根据结果判断
 		
 		if (rc == SOCKET_ERROR)
 		{
@@ -1781,7 +1781,8 @@ exit:
 	return rc;
 }
 
-
+//-这个程序是为了单线程准备的,里面有周期性的消息接收和发送,如果启动了一个周期处理线程
+//-这个程序就不是必要的.
 void MQTTClient_yield(void)	//-客户端放弃,里面有周期处理函数,可以实现发送和接收还有处理
 {
 	START_TIME_TYPE start = MQTTClient_start_clock();
@@ -1821,7 +1822,8 @@ int pubCompare(void* a, void* b)
 	return msg->publish == (Publications*)b;
 }
 
-
+//-这个里面没有任何特殊的就是周期性的查询输出队列中某个帧是否还存在,在规定的时间内没有了就说明成功
+//-发送了
 int MQTTClient_waitForCompletion(MQTTClient handle, MQTTClient_deliveryToken mdt, unsigned long timeout)	//-等待完成
 {
 	int rc = MQTTCLIENT_FAILURE;
@@ -1837,7 +1839,7 @@ int MQTTClient_waitForCompletion(MQTTClient handle, MQTTClient_deliveryToken mdt
 		rc = MQTTCLIENT_FAILURE;
 		goto exit;
 	}
-	if (m->c->connected == 0)
+	if (m->c->connected == 0)	//-只有处于连接状态才可以发送的
 	{
 		rc = MQTTCLIENT_DISCONNECTED;
 		goto exit;
