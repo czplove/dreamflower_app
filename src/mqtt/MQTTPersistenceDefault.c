@@ -15,6 +15,8 @@
  *    Ian Craggs - async client updates
  *******************************************************************************/
 //-持久实现的文件系统,这个文件为MQTT协议创建了一个文件系统,有目录的概念
+//-其实持久存储就是存储在非易失性的存储空间,比如这里默认的以系统文件的形式进行存储
+//-所以就有了文件的创建读写和删除
 /**
  * @file
  * \brief A file system based persistence implementation.
@@ -58,7 +60,7 @@
  *  See ::Persistence_open
  */
 
-int pstopen(void **handle, const char* clientID, const char* serverURI, void* context)
+int pstopen(void **handle, const char* clientID, const char* serverURI, void* context)	//-根据参数创建一个客户端的持久存储路径
 {
 	int rc = 0;
 	char *dataDir = context;
@@ -116,7 +118,7 @@ int pstopen(void **handle, const char* clientID, const char* serverURI, void* co
 /** Function to create a directory.
  * Returns 0 on success or if the directory already exists.
  */
-int pstmkdir( char *pPathname )	//?创建一个持久目录
+int pstmkdir( char *pPathname )	//-创建一个持久目录
 {
 	int rc = 0;
 
@@ -126,7 +128,7 @@ int pstmkdir( char *pPathname )	//?创建一个持久目录
 	{
 #else
 	/* Create a directory with read, write and execute access for the owner and read access for the group */
-	if ( mkdir( pPathname, S_IRWXU | S_IRGRP ) != 0 )	//-创建目录
+	if ( mkdir( pPathname, S_IRWXU | S_IRGRP ) != 0 )	//-创建目录,这里的创建已经到系统层了,就是非易失性的了
 	{
 #endif
 		if ( errno != EEXIST )
@@ -161,17 +163,21 @@ int pstput(void* handle, char* key, int bufcount, char* buffers[], int buflens[]
 
 	/* consider '/' + '\0' */
 	file = malloc(strlen(clientDir) + strlen(key) + strlen(MESSAGE_FILENAME_EXTENSION) + 2 );
-	sprintf(file, "%s/%s%s", clientDir, key, MESSAGE_FILENAME_EXTENSION);
+	sprintf(file, "%s/%s%s", clientDir, key, MESSAGE_FILENAME_EXTENSION);	//-组织文件路径和文件名
 
-	fp = fopen(file, "wb");
+	//-参数1:字符串包含欲打开的文件路径及文件名
+	//-参数2:字符串则代表着流形态。
+	//-形态字符串:
+	//-“wb” 只写打开或新建一个二进制文件；只允许写数据。
+	fp = fopen(file, "wb");	//-这里又到了系统层次的操作了
 	if ( fp != NULL )
 	{
 		for(i=0; i<bufcount; i++)
 		{
 			bytesTotal += buflens[i];
-			bytesWritten += fwrite( buffers[i], sizeof(char), buflens[i], fp );
+			bytesWritten += fwrite( buffers[i], sizeof(char), buflens[i], fp );	//-C语言函数，向文件写入一个数据块
 		}
-		fclose(fp);
+		fclose(fp);	//-关闭一个流即关闭文件
 		fp = NULL;
 	} else
 		rc = MQTTCLIENT_PERSISTENCE_ERROR;
@@ -266,7 +272,7 @@ int pstremove(void* handle, char* key)	//-删除来自客户端持久目录的一个持久信息
 	{
 #else
 	if ( unlink(file) != 0 )	//-删除一个文件的目录项并减少它的链接数，若成功则返回0，否则返回-1，错误原因存于errno。
-	{
+	{//-unlink()会删除参数pathname指定的文件。
 #endif
 		if ( errno != ENOENT )
 			rc = MQTTCLIENT_PERSISTENCE_ERROR;
@@ -738,14 +744,14 @@ int main (int argc, char *argv[])
 
 	/* open */
 	//printf("Persistence directory : %s\n", perdir);
-	rc = pstopen((void**)&handle, clientID, serverURI, perdir);
+	rc = pstopen((void**)&handle, clientID, serverURI, perdir);	//-先创建了一个路径
 	printf("%s Persistence directory for client %s : %s\n", RC, clientID, handle);
 
 	/* put */
 	for(msgId=0;msgId<NMSGS;msgId++)
 	{
 		key = malloc(MESSAGE_FILENAME_LENGTH + 1);
-		sprintf(key, "%s%d", stem, msgId);
+		sprintf(key, "%s%d", stem, msgId);	//-这里的打印实际效果就是向key里面填写内容
 		rc = pstput(handle, key, nbufs, bufs, buflens);
 		printf("%s Adding message %s\n", RC, key);
 		free(key);

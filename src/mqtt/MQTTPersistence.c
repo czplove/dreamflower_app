@@ -39,32 +39,32 @@
  * @return 0 if success, #MQTTCLIENT_PERSISTENCE_ERROR otherwise.
  */
 #include "StackTrace.h"
-
+//-³Ö¾Ã´æ´¢ÔÚ¿Í»§¶ËÃèÊö·ûÀïÃæÓÐÕâÑùµÄÖ¸¶¨
 int MQTTPersistence_create(MQTTClient_persistence** persistence, int type, void* pcontext)	//-´´½¨Ò»¸ö½á¹¹Ìå´ú±íÒ»¸ö³Ö¾ÃµÄÊµÏÖ
 {
 	int rc = 0;
-	MQTTClient_persistence* per = NULL;
+	MQTTClient_persistence* per = NULL;	//-Ò»¸ö½á¹¹ÌåÓÃÓÚ´æ´¢³Ö¾Ã´æ´¢µÄÐÅÏ¢
 
 	FUNC_ENTRY;
 #if !defined(NO_PERSISTENCE)
-	switch (type)
-	{
+	switch (type)	//-¼´Ê¹¶¨ÒåÁË³Ö¾Ã´æ´¢,ÔÚ´´½¨¿Í»§¶ËµÄÊ±ºò»¹¿ÉÒÔÑ¡Ôñ³Ö¾Ã´æ´¢µÄÀàÐÍ
+	{//-´æ´¢ÆäÊµ¾ÍÊÇ±£´æÔÚ·ÇÒ×Ê§ÐÔ¿Õ¼äÄÚ,ÕâÀï¿ÉÒÔ¸ù¾ÝÅäÖÃÑ¡Ôñ´æ´¢µÄµØ·½
 		case MQTTCLIENT_PERSISTENCE_NONE :
 			per = NULL;
 			break;
-		case MQTTCLIENT_PERSISTENCE_DEFAULT :
+		case MQTTCLIENT_PERSISTENCE_DEFAULT :		//-ÈÃÏµÍ³·ÖÅä
 			per = malloc(sizeof(MQTTClient_persistence));
 			if ( per != NULL )
 			{
 				if ( pcontext != NULL )
 				{
-					per->context = malloc(strlen(pcontext) + 1);
+					per->context = malloc(strlen(pcontext) + 1);	//-ÃèÊö±í,¿ÉÄÜÊÇÓÃÓÚËµÃ÷Õû¸ö³Ö¾Ã´æ´¢¿Õ¼äµÄ;»òÕßÊÇËµÃ÷´æ´¢Â·¾¶µÄ
 					strcpy(per->context, pcontext);
 				}
 				else
 					per->context = ".";  /* working directory */
 				/* file system functions */
-				per->popen        = pstopen;
+				per->popen        = pstopen;	//-¿ª±ÙÁËÒ»¸ö¿Õ¼ä¼ÇÂ¼³Ö¾Ã´æ´¢ÐÅÏ¢,ÕâÀï¶¼ÊÇ¶ÔÕâÐ©ÐÅÏ¢½øÐÐÌîÐ´µÄ
 				per->pclose       = pstclose;
 				per->pput         = pstput;
 				per->pget         = pstget;
@@ -76,7 +76,7 @@ int MQTTPersistence_create(MQTTClient_persistence** persistence, int type, void*
 			else
 				rc = MQTTCLIENT_PERSISTENCE_ERROR;
 			break;
-		case MQTTCLIENT_PERSISTENCE_USER :
+		case MQTTCLIENT_PERSISTENCE_USER :	//-ÓÃ»§Ö¸¶¨ÁË´æ´¢µÄÖ¸Õë
 			per = (MQTTClient_persistence *)pcontext;
 			if ( per == NULL || (per != NULL && (per->context == NULL || per->pclear == NULL ||
 				per->pclose == NULL || per->pcontainskey == NULL || per->pget == NULL || per->pkeys == NULL ||
@@ -108,7 +108,7 @@ int MQTTPersistence_initialize(Clients *c, const char *serverURI)	//-´ò¿ª³Ö¾Ã´æ´
 
 	FUNC_ENTRY;
 	if ( c->persistence != NULL )	//-Èç¹ûÃ»ÓÐÊ¹ÓÃ³Ö¾Ã´æ´¢µÄ»°,¾ÍÃ»ÓÐÏÂÃæ²Ù×÷
-	{
+	{//-´æÔÚ²Ù×÷ÃèÊö½á¹¹Ìå,ÏÂÃæ²Å¿ÉÒÔ²Ù×÷
 		rc = c->persistence->popen(&(c->phandle), c->clientID, serverURI, c->persistence->context);
 		if ( rc == 0 )
 			rc = MQTTPersistence_restore(c);
@@ -520,7 +520,7 @@ int MQTTPersistence_persistQueueEntry(Clients* aclient, MQTTPersistence_qEntry* 
 	sprintf(key, "%s%d", PERSISTENCE_QUEUE_KEY, ++aclient->qentry_seqno);	
 	qe->seqno = aclient->qentry_seqno;
 
-	if ((rc = aclient->persistence->pput(aclient->phandle, key, nbufs, (char**)bufs, lens)) != 0)
+	if ((rc = aclient->persistence->pput(aclient->phandle, key, nbufs, (char**)bufs, lens)) != 0)	//-Ïò³Ö¾ÃÂ·¾¶Ð´¶«Î÷
 		Log(LOG_ERROR, 0, "Error persisting queue entry, rc %d", rc);
 
 	free(lens);

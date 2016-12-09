@@ -167,7 +167,7 @@ void* MQTTPacket_Factory(networkHandles* net, int* error)	//-读一个来自套接字的M
 				buf0len = 1 + MQTTPacket_encode(&buf[1], remaining_length);
 				remaining_length_new = remaining_length;
 				*error = MQTTPersistence_put(net->socket, buf, buf0len, 1,
-					&data, &remaining_length_new, header.bits.type, ((Publish *)pack)->msgId, 1);
+					&data, &remaining_length_new, header.bits.type, ((Publish *)pack)->msgId, 1);	//-把接收到的内容进行持久化存储
 				free(buf);
 			}
 #endif
@@ -204,7 +204,7 @@ int MQTTPacket_send(networkHandles* net, Header header, char* buffer, size_t buf
 		char* ptraux = buffer;
 		int msgId = readInt(&ptraux);
 		rc = MQTTPersistence_put(net->socket, buf, buf0len, 1, &buffer, &buflen,
-			header.bits.type, msgId, 0);
+			header.bits.type, msgId, 0);	//-如果发送的消息需要再次发送的话,就先进行持久存储,防止掉电丢失不能再发了
 	}
 #endif
 

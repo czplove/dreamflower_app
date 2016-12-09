@@ -303,7 +303,7 @@ int MQTTClient_create(MQTTClient* handle, const char* serverURI, const char* cli
 #if !defined(NO_PERSISTENCE)
 	rc = MQTTPersistence_create(&(m->c->persistence), persistence_type, persistence_context);	//-Ä¿Ç°ÏµÍ³ÖĞÃ»ÓĞÊ¹ÓÃ³Ö¾Ã¿Õ¼ä,ÄÇ¾ÍÏÈ²»¿¼ÂÇ,ÏÈÀ´Ò»²ãÒ»²ã²¦
 	if (rc == 0)
-	{
+	{//-´´½¨³Ö¾Ã¿Õ¼ä³É¹¦,ÏÂÃæ¿ªÊ¼³õÊ¼»¯
 		rc = MQTTPersistence_initialize(m->c, m->serverURI);
 		if (rc == 0)
 			MQTTPersistence_restoreMessageQueue(m->c);
@@ -436,7 +436,7 @@ int MQTTClient_deliverMessage(int rc, MQTTClients* m, char** topicName, int* top
 	if (m->c->persistence)
 		MQTTPersistence_unpersistQueueEntry(m->c, (MQTTPersistence_qEntry*)qe);
 #endif
-	ListRemove(m->c->messageQueue, m->c->messageQueue->first->content);
+	ListRemove(m->c->messageQueue, m->c->messageQueue->first->content);	//-µ½ÕâÀïËµÃ÷ÏûÏ¢ÒÑ¾­´¦Àíµ½ÏÂÒ»¸ö±êÖ¾ÁË,ÕâÀï¿ÉÒÔÈ¥³ıÁË
 	FUNC_EXIT_RC(rc);
 	return rc;
 }
@@ -722,7 +722,7 @@ int MQTTClient_cleanSession(Clients* client)	//-Çå³ı»á»°
 }
 
 
-void Protocol_processPublication(Publish* publish, Clients* client)	//-´¦Àí½ÓÊÕµ½µÄÏûÏ¢,Õâ¸öÊÇ×î´ó·¢Ò»´ÎµÄÏûÏ¢
+void Protocol_processPublication(Publish* publish, Clients* client)	//-´¦Àí½ÓÊÕµ½µÄÏûÏ¢,Õâ¸öÊÇ×î¶à·¢Ò»´ÎµÄÏûÏ¢
 {
 	qEntry* qe = NULL;
 	MQTTClient_message* mm = NULL;
@@ -760,7 +760,7 @@ void Protocol_processPublication(Publish* publish, Clients* client)	//-´¦Àí½ÓÊÕµ
 	ListAppend(client->messageQueue, qe, sizeof(qe) + sizeof(mm) + mm->payloadlen + strlen(qe->topicName)+1);	//-½ÓÊÕµ½µÄÏûÏ¢´æ´¢ÔÚ¿ª±ÙµÄĞÂ¿Õ¼ä,µ«ÊÇÈÔÈ»Í¨¹ıÁ´±í¼ÇÒä½á¹¹
 #if !defined(NO_PERSISTENCE)
 	if (client->persistence)
-		MQTTPersistence_persistQueueEntry(client, (MQTTPersistence_qEntry*)qe);
+		MQTTPersistence_persistQueueEntry(client, (MQTTPersistence_qEntry*)qe);	//-°Ñ½ÓÊÕµ½µÄĞÅÏ¢´æ´¢µ½³Ö¾ÃÎÄ¼şÖĞ
 #endif
 	FUNC_EXIT;
 }
@@ -1462,7 +1462,7 @@ int MQTTClient_publish(MQTTClient handle, const char* topicName, int payloadlen,
 	 * be sent when the client next connects.
 	 */
 	if (rc == TCPSOCKET_INTERRUPTED)
-	{
+	{//-Ïë·¨ºÜ¼òµ¥,Èç¹ûÃ»ÓĞ·¢ËÍ³öÈ¥¾ÍÓÅÏÈÑ­»·²éÕÒ,¶ø²»µÈÖÜÆÚº¯Êı,Ìá¸ßËÙ¶È
 		while (m->c->connected == 1 && SocketBuffer_getWrite(m->c->net.socket))
 		{
 			Thread_unlock_mutex(mqttclient_mutex);
@@ -1751,7 +1751,7 @@ int MQTTClient_receive(MQTTClient handle, char** topicName, int* topicLen, MQTTC
 	*message = NULL;
 
 	/* if there is already a message waiting, don't hang around but still do some packet handling */
-	if (m->c->messageQueue->count > 0)
+	if (m->c->messageQueue->count > 0)	//-ËµÃ÷ÒÑ¾­ÓĞÏûÏ¢±»½ÓÊÕµ½ÁË,µÈ´ı´¦Àí
 		timeout = 0L;
 
 	elapsed = MQTTClient_elapsed(start);
