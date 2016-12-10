@@ -88,7 +88,7 @@ int setStack(int create)	//-首先在里面找,如果有就返回偏移量,没有的话建一个
 	}
 
 	if (cur_thread == NULL && create && thread_count < MAX_THREADS)
-	{
+	{//-在里面没有找到一样的,是一个新的线程那么就创建一个记录
 		cur_thread = &threads[thread_count];
 		cur_thread->id = curid;
 		cur_thread->maxdepth = 0;
@@ -98,6 +98,10 @@ int setStack(int create)	//-首先在里面找,如果有就返回偏移量,没有的话建一个
 	return cur_thread != NULL; /* good == 1 */
 }
 
+//-C标准中指定了一些预定义的宏，对于编程经常会用到。
+//-__func__		当前所在函数名
+//-__LINE__		代表当前源代码中的行号的整数常量
+//-TRACE_MINIMUM		跟踪是分水平的,这个就是指跟踪的水平
 void StackTrace_entry(const char* name, int line, int trace_level)
 {
 	Thread_lock_mutex(stack_mutex);

@@ -47,7 +47,7 @@ char* MQTTProtocol_addressPort(const char* uri, int* port)	//-从一个字符串中分析
 	char* buf = (char*)uri;
 	int len;
 
-	FUNC_ENTRY;
+	FUNC_ENTRY;		//-这个是定义的一个宏,可能就是指向一个跟踪函数的
 	if (uri[0] == '[')
 	{  /* ip v6 */
 		if (colon_pos < strrchr(uri, ']'))

@@ -26,7 +26,7 @@
 
 
 #include "Thread.h"
-#if defined(THREAD_UNIT_TESTS)
+#if defined(THREAD_UNIT_TESTS)	//-如果在测试线程单元模块的话会定义,实际使用中没有定义
 #define NOSTACKTRACE
 #endif
 #include "StackTrace.h"

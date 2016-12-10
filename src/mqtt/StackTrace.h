@@ -21,7 +21,7 @@
 #include "Log.h"
 #include "Thread.h"
 
-#if defined(NOSTACKTRACE)
+#if defined(NOSTACKTRACE)	//-实际这个宏是没有定义的
 #define FUNC_ENTRY
 #define FUNC_ENTRY_NOLOG
 #define FUNC_ENTRY_MED
