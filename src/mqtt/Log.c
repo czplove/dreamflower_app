@@ -232,7 +232,7 @@ void Log_terminate()	//-跟踪结束处理
 }
 
 
-static traceEntry* Log_pretrace()
+static traceEntry* Log_pretrace()	//-返回一个指向准备填写跟踪数据空间的指针
 {
 	traceEntry *cur_entry = NULL;
 
@@ -243,18 +243,18 @@ static traceEntry* Log_pretrace()
 		gettimeofday(&ts, NULL);
 		if (ts.tv_sec != last_ts.tv_sec || ts.tv_usec != last_ts.tv_usec)
 #else
-		ftime(&ts);
-		if (ts.time != last_ts.time || ts.millitm != last_ts.millitm)
+		ftime(&ts);	//-将目前日期由tp所指的结构返回的函数
+		if (ts.time != last_ts.time || ts.millitm != last_ts.millitm)	//-即获得了当前日期
 #endif
 		{
-			sametime_count = 0;
+			sametime_count = 0;	//-结合上面控制了每20次更新一次显示时间
 			last_ts = ts;
 		}
 	}
 
 	if (trace_queue_size != trace_settings.max_trace_entries)
-	{
-		traceEntry* new_trace_queue = malloc(sizeof(traceEntry) * trace_settings.max_trace_entries);
+	{//-这里仅仅是防错处理,或者防止log没有初始化,而使用了跟踪,所以这进行了修正或初始化,正常是不进入的
+		traceEntry* new_trace_queue = malloc(sizeof(traceEntry) * trace_settings.max_trace_entries);	//-新开辟的空间
 
 		memcpy(new_trace_queue, trace_queue, min(trace_queue_size, trace_settings.max_trace_entries) * sizeof(traceEntry));
 		free(trace_queue);
@@ -270,15 +270,15 @@ static traceEntry* Log_pretrace()
 	}
 
 	/* add to trace buffer */
-	cur_entry = &trace_queue[next_index];
+	cur_entry = &trace_queue[next_index];	//-这个指向了一个跟踪存储空间
 	if (next_index == start_index) /* means the buffer is full */
 	{
 		if (++start_index == trace_settings.max_trace_entries)
 			start_index = 0;
 	} else if (start_index == -1)
 		start_index = 0;
-	if (++next_index == trace_settings.max_trace_entries)
-		next_index = 0;
+	if (++next_index == trace_settings.max_trace_entries)	//-这里移动了索引号,指向了下一个准备填写数据的地方
+		next_index = 0;	//-实现了循环记录
 
 	return cur_entry;
 }
@@ -347,16 +347,16 @@ static void Log_output(int log_level, char* msg)	//-把信息打印到预设的文件中
 }
 
 
-static void Log_posttrace(int log_level, traceEntry* cur_entry)	//-后跟踪,,也是向跟踪文件中输入信息,只是这个信息是特定内容
+static void Log_posttrace(int log_level, traceEntry* cur_entry)	//-投递跟踪,,也是向跟踪文件中输入信息,只是这个信息是特定内容
 {
 	if (((trace_output_level == -1) ? log_level >= trace_settings.trace_level : log_level >= trace_output_level))
-	{
+	{//-上面还是水平控制语句,所有的代码都是一样的,但是由于参数不同,效果是不同的
 		char* msg = NULL;
 		
 		if (trace_destination || trace_callback)
-			msg = &Log_formatTraceEntry(cur_entry)[7];
+			msg = &Log_formatTraceEntry(cur_entry)[7];	//-前面所有的信息都记录在一个结构体中,这里根据信息,形成了一个内容(仅仅转换成了直观表达)
 		
-		Log_output(log_level, msg);
+		Log_output(log_level, msg);	//-就是把内容输出到需要的地方,比如文件,终端窗口等
 	}
 }
 
@@ -433,16 +433,16 @@ void Log_stackTrace(int log_level, int msgno, int thread_id, int current_depth, 
 {
 	traceEntry *cur_entry = NULL;
 
-	if (trace_queue == NULL)
+	if (trace_queue == NULL)	//-光有调试需求也不行,也需要开辟了这样的功能
 		return;
 
-	if (log_level < trace_settings.trace_level)
+	if (log_level < trace_settings.trace_level)	//-跟踪设置了一个水平选项,可以有选择性的跟踪,而不一定需要修改代码,仅仅修改一个参数即可
 		return;
-
+	//-上面的思想很好,这样可以在选择的基础上最大限度的减少程序修改
 	Thread_lock_mutex(log_mutex);
 	cur_entry = Log_pretrace();
 
-	memcpy(&(cur_entry->ts), &ts, sizeof(ts));
+	memcpy(&(cur_entry->ts), &ts, sizeof(ts));	//-向跟踪信息体中填写数据
 	cur_entry->sametime_count = sametime_count;
 	cur_entry->number = msgno;
 	cur_entry->thread_id = thread_id;
@@ -457,7 +457,7 @@ void Log_stackTrace(int log_level, int msgno, int thread_id, int current_depth, 
 		cur_entry->has_rc = 1;
 		cur_entry->rc = *rc;
 	}
-
+	//-上面是向结构体组织内容,但是这个内容并不形象,下面就转化成了形象的内容形式,输出人直接阅读
 	Log_posttrace(log_level, cur_entry);
 	Thread_unlock_mutex(log_mutex);
 }

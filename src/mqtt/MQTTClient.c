@@ -175,7 +175,7 @@ typedef struct
 
 void MQTTClient_sleep(long milliseconds)
 {
-	FUNC_ENTRY;
+	FUNC_ENTRY;	//-这样的一个进入函数,作为一个跟踪,在配置的情况下,会打印出log以便了解程序流程
 #if defined(WIN32) || defined(WIN64)
 	Sleep(milliseconds);
 #else

@@ -61,7 +61,7 @@ typedef struct
 #include "StackTrace.h"
 
 static int thread_count = 0;
-static threadEntry threads[MAX_THREADS];
+static threadEntry threads[MAX_THREADS];	//-跟踪就是把信息输送处理显示,没有记录,这里开辟了全局变量记录可能的信息
 static threadEntry *cur_thread = NULL;
 
 #if defined(WIN32) || defined(WIN64)
@@ -107,13 +107,13 @@ void StackTrace_entry(const char* name, int line, int trace_level)
 	Thread_lock_mutex(stack_mutex);
 	if (!setStack(1))
 		goto exit;
-	if (trace_level != -1)
-		Log_stackTrace(trace_level, 9, (int)cur_thread->id, cur_thread->current_depth, name, line, NULL);
-	strncpy(cur_thread->callstack[cur_thread->current_depth].name, name, sizeof(cur_thread->callstack[0].name)-1);
-	cur_thread->callstack[(cur_thread->current_depth)++].line = line;
+	if (trace_level != -1)	//-如果运行到这里就有了记录的变量
+		Log_stackTrace(trace_level, 9, (int)cur_thread->id, cur_thread->current_depth, name, line, NULL);	//-里面进行了信息的输出打印
+	strncpy(cur_thread->callstack[cur_thread->current_depth].name, name, sizeof(cur_thread->callstack[0].name)-1);	//-复制字符串的前n个字符
+	cur_thread->callstack[(cur_thread->current_depth)++].line = line;	//-增加了进入的层次号,
 	if (cur_thread->current_depth > cur_thread->maxdepth)
-		cur_thread->maxdepth = cur_thread->current_depth;
-	if (cur_thread->current_depth >= MAX_STACK_DEPTH)
+		cur_thread->maxdepth = cur_thread->current_depth;	//-记录了曾经进入的最深层次号
+	if (cur_thread->current_depth >= MAX_STACK_DEPTH)	//-与堆栈最大的深度进行比较
 		Log(LOG_FATAL, -1, "Max stack depth exceeded");
 exit:
 	Thread_unlock_mutex(stack_mutex);
@@ -123,9 +123,9 @@ exit:
 void StackTrace_exit(const char* name, int line, void* rc, int trace_level)
 {
 	Thread_lock_mutex(stack_mutex);
-	if (!setStack(0))
+	if (!setStack(0))	//-参数0表示寻找相同的,如果不存在不创建新的
 		goto exit;
-	if (--(cur_thread->current_depth) < 0)
+	if (--(cur_thread->current_depth) < 0)	//-这里的目的就是退出一层,通过打印信息了解程序执行的流程
 		Log(LOG_FATAL, -1, "Minimum stack depth exceeded for thread %lu", cur_thread->id);
 	if (strncmp(cur_thread->callstack[cur_thread->current_depth].name, name, sizeof(cur_thread->callstack[0].name)-1) != 0)
 		Log(LOG_FATAL, -1, "Stack mismatch. Entry:%s Exit:%s\n", cur_thread->callstack[cur_thread->current_depth].name, name);
