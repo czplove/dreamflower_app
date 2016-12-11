@@ -16,6 +16,7 @@
  *    Ian Craggs - change roundup to Heap_roundup to avoid macro name clash on MacOSX
  *******************************************************************************/
 //-¶Ñ:Ò»°ãÓÉ³ÌĞòÔ±·ÖÅäÊÍ·Å
+//-¹ÜÀí¶ÑµÄº¯ÊıÓĞÏû³ıÄÚ´æĞ¹Â©µÄÄ¿µÄ
 /**
  * @file
  * \brief functions to manage the heap with the goal of eliminating memory leaks
@@ -52,7 +53,7 @@ static mutex_type heap_mutex = &heap_mutex_store;
 #endif
 
 static heap_info state = {0, 0}; /**< global heap state information */
-static int eyecatcher = 0x88888888;
+static int eyecatcher = 0x88888888;		//-Ê¶±ğĞòÁĞ
 
 /**
  * Each item on the heap is recorded with this structure.
@@ -75,7 +76,7 @@ static char* errmsg = "Memory allocation error";
  * @param size the size actually needed
  * @return the rounded up size
  */
-int Heap_roundup(int size)
+int Heap_roundup(int size)	//-¸ù¾İÊµ¼ÊĞèÒªµÄÄÚ´æ³ß´ç,·ÖÅäÒ»¸öÕûÊıÄÚ´æ³ß´ç±£Ö¤µØÖ·¶ÔÆë,·ñÔòÒ²ÊÇÀË·Ñ,Ò²ÊÇÒ»¸öÄÚ´æĞ¹Â©
 {
 	static int multsize = 4*sizeof(int);
 
@@ -136,8 +137,8 @@ void Heap_check(char* string, void* ptr)
  * @param size the size of the item to be allocated
  * @return pointer to the allocated item, or NULL if there was an error
  */
-void* mymalloc(char* file, int line, size_t size)	//-·ÖÅäÒ»¸ö¿Õ°×µÄ¿Õ¼ä. ÓÃÓÚÖ±½ÓÌæ´úmallocº¯ÊıµÄ.
-{
+void* mymalloc(char* file, int line, size_t size)	//-·ÖÅäÒ»¸ö¿Õ°×µÄ¿Õ¼ä. ÓÃÓÚÖ±½ÓÌæ´úmallocº¯ÊıµÄ.µ«ÊÇ±£³Ö±»·ÖÅäµÄÏîÄ¿×Ù¼£ÔÚÒ»¸öÁĞ±íÖĞ
+{																									//-ËùÒÔÊÍ·ÅÊ±ÄÜ¹»¼ì²éÒ»¸öÕıÔÚ±»ÕıÈ·ÊÍ·ÅµÄÏîÄ¿²¢ÄÜ¹»¼ì²éËùÓĞµÄÄÚÈİÊÇ·ñ±»ÊÍ·ÅÔÚ¹Ø±ÕµÄÊ±ºò
 	storageElement* s = NULL;
 	int space = sizeof(storageElement);
 	int filenamelen = strlen(file)+1;
@@ -180,7 +181,7 @@ void* mymalloc(char* file, int line, size_t size)	//-·ÖÅäÒ»¸ö¿Õ°×µÄ¿Õ¼ä. ÓÃÓÚÖ±½
 }
 
 
-void checkEyecatchers(char* file, int line, void* p, int size)
+void checkEyecatchers(char* file, int line, void* p, int size)	//-¼ì²éÊ¶±ğĞòÁĞ
 {
 	int *sp = (int*)p;
 	char *cp = (char*)p;
@@ -203,7 +204,7 @@ void checkEyecatchers(char* file, int line, void* p, int size)
  * @param line use the __LINE__ macro to indicate which line this item was allocated at
  * @param p pointer to the item to be removed
  */
-int Internal_heap_unlink(char* file, int line, void* p)
+int Internal_heap_unlink(char* file, int line, void* p)	//-ÒÆ³ıÒ»¸öÏîÄ¿´Ó¶ÑµÄ¼ÇÂ¼ÖĞ,µ«ÊÇÃ»ÓĞÊµ¼ÊÊÍ·ÅËû.É÷ÖØµÄÊ¹ÓÃ.
 {
 	Node* e = NULL;
 	int rc = 0;
@@ -235,7 +236,7 @@ int Internal_heap_unlink(char* file, int line, void* p)
  * @param line use the __LINE__ macro to indicate which line this item was allocated at
  * @param p pointer to the item to be freed
  */
-void myfree(char* file, int line, void* p)
+void myfree(char* file, int line, void* p)	//-ÊÍ·ÅÒ»¸ö¿Õ°×µÄÄÚ´æ.Ö±½ÓÖÃ»»,µ«ÊÇÊ×ÏÈ¼ì²éÏîÄ¿ÊÇ·ñÔÚ·ÖÅäÁĞ±íÄÚ
 {
 	Thread_lock_mutex(heap_mutex);
 	if (Internal_heap_unlink(file, line, p))
@@ -251,7 +252,7 @@ void myfree(char* file, int line, void* p)
  * @param line use the __LINE__ macro to indicate which line this item was allocated at
  * @param p pointer to the item to be removed
  */
-void Heap_unlink(char* file, int line, void* p)
+void Heap_unlink(char* file, int line, void* p)	//-ÒÆ³ıÒ»¸öÏîÄ¿´Ó¶ÑµÄ¼ÇÂ¼ÖĞ,µ«ÊÇÃ»ÓĞÊµ¼ÊÊÍ·ÅËû.É÷ÖØµÄÊ¹ÓÃ.
 {
 	Thread_lock_mutex(heap_mutex);
 	Internal_heap_unlink(file, line, p);
@@ -271,9 +272,9 @@ void Heap_unlink(char* file, int line, void* p)
  * @param size the new size of the item
  * @return pointer to the allocated item, or NULL if there was an error
  */
-void *myrealloc(char* file, int line, void* p, size_t size)
-{
-	void* rc = NULL;
+void *myrealloc(char* file, int line, void* p, size_t size)	//-ÔÙ·ÖÅäÒ»¸ö¿Õ°×ÄÚ´æ.Ö±½ÓÌæ»»realloc.µ«ÊÇ±£³ÖÏîÄ¿ÔÚÁĞ±íÖĞ·ÖÅäµÄ×Ù¼£,ËùÒÔÊÍ·Å
+{																														//-ÄÜ¼ì²éÒ»¸öÏîÄ¿ÊÇ·ñÕı±»ÕıÈ·ÊÍ·Å²¢ÇÒÄÜ¹»¼ì²éËùÓĞÄÚÈİÊÇ·ñ±»ÊÍ·ÅÔÚ¹Ø±ÕµÄÊ±ºò
+	void* rc = NULL;																					//-ÎÒÃÇ²»µÃ²»´ÓÊ÷ÀïÃæÒÆ³ıÏîÄ¿,ÓÉÓÚÄÚ´æÊÇ°´´ÎĞòµÄ,ËùÒÔĞèÒªÔÙ´Î²åÈëµ½ÕıÈ·Î»ÖÃ
 	storageElement* s = NULL;
 	
 	Thread_lock_mutex(heap_mutex);
@@ -318,7 +319,7 @@ void *myrealloc(char* file, int line, void* p, size_t size)
  * @param p pointer to a memory location
  * @return pointer to the storage element if found, or NULL
  */
-void* Heap_findItem(void* p)
+void* Heap_findItem(void* p)	//-Í¨ÓÃµÄÔÚ¶ÑÀïÃæ²éÕÒÒ»¸öÏîÄ¿.ÈÃÄãÖªµÀ¶ÑÊÇ·ñÒÑ¾­°üº¬ÁËÔÚÌÖÂÛÖĞµÄÄÚ´æÎ»ÖÃ.
 {
 	Node* e = NULL;
 
@@ -333,7 +334,7 @@ void* Heap_findItem(void* p)
  * Scans the heap and reports any items currently allocated.
  * To be used at shutdown if any heap items have not been freed.
  */
-void HeapScan(int log_level)
+void HeapScan(int log_level)	//-ä¯ÀÀ¶Ñ²¢ÇÒ±¨¸æÒ»Ğ©ÏîÄ¿µ±Ç°µÄ·ÖÅäÖµ.±»ÓÃÓÚÔÚ¹Ø±ÕµÄÊ±ºò¿´¶ÑµÄÒ»Ğ©ÏîÄ¿ÊÇ·ñÃ»ÓĞÒÑ¾­±»ÊÍ·Å.
 {
 	Node* current = NULL;
 	
@@ -364,7 +365,7 @@ int Heap_initialize()	//-½ö½ö½øĞĞ¶ÑÕ»³õÊ¼»¯,Õâ¸öÊÇ×Ô¼º½¨Á¢µÄÈí¼ş¶ÑÕ»?
 /**
  * Heap termination.
  */
-void Heap_terminate()
+void Heap_terminate()	//-¶ÑÖÕÖ¹
 {
 	Log(TRACE_MIN, -1, "Maximum heap use was %d bytes", state.max_size);	//-¶ÑµÄ×î´ó×Ö½ÚÊı¾İ
 	if (state.current_size > 20) /* One log list is freed after this function is called */
@@ -379,7 +380,7 @@ void Heap_terminate()
  * Access to heap state
  * @return pointer to the heap state structure
  */
-heap_info* Heap_get_info()
+heap_info* Heap_get_info()	//-Ö¸Ïò¶ÑµÄ×´Ì¬
 {
 	return &state;
 }
@@ -390,12 +391,12 @@ heap_info* Heap_get_info()
  * @param file file handle to dump the heap contents to
  * @param str the string to dump, could be NULL
  */
-int HeapDumpString(FILE* file, char* str)
+int HeapDumpString(FILE* file, char* str)	//-×ª´æÀ´×Ô¶ÑµÄÒ»¸ö×Ö·û´®ÒÔ±ãËüÄÜ¹»±»·½±ãµÄÏÔÊ¾
 {
 	int rc = 0;
 	int len = str ? strlen(str) + 1 : 0; /* include the trailing null */
 
-	if (fwrite(&(str), sizeof(char*), 1, file) != 1)
+	if (fwrite(&(str), sizeof(char*), 1, file) != 1)	//-ÏòÎÄ¼şĞ´ÈëÒ»¸öÊı¾İ¿é
 		rc = -1;
 	else if (fwrite(&(len), sizeof(int), 1 ,file) != 1)
 		rc = -1;
@@ -409,7 +410,7 @@ int HeapDumpString(FILE* file, char* str)
  * Dump the state of the heap
  * @param file file handle to dump the heap contents to
  */
-int HeapDump(FILE* file)
+int HeapDump(FILE* file)	//-×ª´æ¶ÑµÄ×´Ì¬
 {
 	int rc = 0;
 	Node* current = NULL;
