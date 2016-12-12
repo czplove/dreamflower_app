@@ -107,7 +107,8 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 	return TRUE;
 }
 #else
-static pthread_mutex_t mqttclient_mutex_store = PTHREAD_MUTEX_INITIALIZER;
+//-互斥锁是pthread_mutex_t的结构体，而PTHREAD_MUTEX_INITIALIZER这个宏是一个结构常量，
+static pthread_mutex_t mqttclient_mutex_store = PTHREAD_MUTEX_INITIALIZER;	//-完成静态的初始化锁,这里完成初始化之后,下面就可以使用这个变量了
 static mutex_type mqttclient_mutex = &mqttclient_mutex_store;
 static pthread_mutex_t socket_mutex_store = PTHREAD_MUTEX_INITIALIZER;
 static mutex_type socket_mutex = &socket_mutex_store;
