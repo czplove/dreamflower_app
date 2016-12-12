@@ -175,7 +175,7 @@ void* mymalloc(char* file, int line, size_t size)	//-·ÖÅäÒ»¸ö¿Õ°×µÄ¿Õ¼ä. ÓÃÓÚÖ±½
 	TreeAdd(&heap, s, space);	//-¶ÑÊÇÓÃÒ»¸öÊ÷½á¹¹À´¼ÇÂ¼µÄ,ÏÖÔÚÔÚÕâ¸ö½á¹¹ÖĞÔö¼ÓÒ»¸ö³ÉÔ±.S¼ÇÂ¼ÁËÕû¸ö·ÖÅä¿Õ¼äµÄÊôĞÔ,space¼ÇÂ¼ÁË´óĞ¡
 	state.current_size += size;
 	if (state.current_size > state.max_size)
-		state.max_size = state.current_size;
+		state.max_size = state.current_size;	//-ÕâÑùÓï¾äµÄ¹¦ÄÜÊÇ¼ÇÂ¼³öÏÖ¹ıµÄ×î´óÖµ
 	Thread_unlock_mutex(heap_mutex);		
 	return ((int*)(s->ptr)) + 1;	/* skip start eyecatcher */
 }
