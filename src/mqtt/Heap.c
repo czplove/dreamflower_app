@@ -48,7 +48,7 @@ char* Broker_recordFFDC(char* symptoms);
 #if defined(WIN32) || defined(WIN64)
 mutex_type heap_mutex;
 #else
-static pthread_mutex_t heap_mutex_store = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t heap_mutex_store = PTHREAD_MUTEX_INITIALIZER;	//-æ≤Ã¨≥ı ºªØª•≥‚À¯
 static mutex_type heap_mutex = &heap_mutex_store;
 #endif
 

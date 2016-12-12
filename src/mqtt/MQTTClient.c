@@ -366,7 +366,7 @@ void MQTTClient_destroy(MQTTClient* handle)	//-程序结束了,对对象的销毁
 	MQTTClients* m = *handle;
 
 	FUNC_ENTRY;
-	Thread_lock_mutex(mqttclient_mutex);
+	Thread_lock_mutex(mqttclient_mutex);	//-调用目的就是上锁,如果已经被其他线程锁定了就会阻塞等待其他线程结束.
 
 	if (m == NULL)
 		goto exit;

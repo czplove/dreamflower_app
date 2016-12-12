@@ -113,8 +113,8 @@ int Thread_lock_mutex(mutex_type mutex)	//-互斥锁,会阻塞直到可用
 		/* WaitForSingleObject returns WAIT_OBJECT_0 (0), on success */
 		rc = WaitForSingleObject(mutex, INFINITE);
 	#else
-		rc = pthread_mutex_lock(mutex);
-	#endif
+		rc = pthread_mutex_lock(mutex);	//-线程调用该函数让互斥锁上锁，如果该互斥锁已被另一个线程锁定和拥有，则调用该线程将阻塞，直到该互斥锁变为可用为止。
+	#endif														//-当pthread_mutex_lock()返回时，该互斥锁已被锁定。
 
 	return rc;
 }
@@ -406,7 +406,7 @@ int Thread_signal_cond(cond_type condvar)	//-结束一个阻塞的线程,使其继续执行
 
 	pthread_mutex_lock(&condvar->mutex);
 	rc = pthread_cond_signal(&condvar->cond);	//-发送一个信号给另外一个正在处于阻塞等待状态的线程,使其脱离阻塞状态,继续执行.如果没有线程处在阻塞等待状态,pthread_cond_signal也会成功返回。
-	pthread_mutex_unlock(&condvar->mutex);
+	pthread_mutex_unlock(&condvar->mutex);	//-解锁
 
 	return rc;
 }
