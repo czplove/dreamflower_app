@@ -87,7 +87,7 @@ int mqtt_disconnect(mqtt_client * m)
  *
  * @return 1 if MQTT client is connected, else return 0
  */
-int mqtt_is_connected(mqtt_client *m)
+int mqtt_is_connected(mqtt_client *m)	//-现成的判断连接是否存在
 {
 	if (!m) return 0;
 	return MQTTClient_isConnected(m->client);

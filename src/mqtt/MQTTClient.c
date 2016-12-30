@@ -915,7 +915,7 @@ int MQTTClient_connectURIVersion(MQTTClient handle, MQTTClient_connectOptions* o
 						m->lastTouch = 0;
 					}
 					MQTTProtocol_retry((time_t)0, 1, 1);
-					if (m->c->connected != 1)
+					if (m->c->connected != 1)	//-判断MQTT是否被连接
 						rc = MQTTCLIENT_DISCONNECTED;
 				}
 			}
